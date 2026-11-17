@@ -77,8 +77,9 @@ body.nolabel .lbl{opacity:0!important}
   <div class="row"><span>护理</span><p id="cCare"></p></div>
   <div class="meter"><div>正从表面跑掉的水汽<b id="mOut">0</b></div><em>水汽（示意）</em></div>
 </div>
-<div class="foot">示意图：各层厚度做了放大，不是真实比例 · 拖动旋转，双指缩放</div>
+<div class="foot">示意图：各层厚度做了放大，不是真实比例 · 拖动旋转，双指缩放 · 表面贴图 Human Materials 1 (CC0, Sketchfab)</div>
 
+<script src="textures/skin_tex.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -154,7 +155,13 @@ const surfY = (x,z) => TOP + .1*Math.sin(x*.8+.3)*Math.cos(z*.9-.5) + .05*Math.s
 const ejY = (x,z) => surfY(x,z) - .52 + .09*(Math.sin(x*3.3+.4) + Math.sin(z*3.1-.2));     // 表皮/真皮交界
 const dbY = (x,z) => .45 + .18*Math.sin(x*1.1+.3) + .14*Math.cos(z*1.3);       // 真皮/脂肪交界
 const fxY = y => -2 + (y-.7)*.18;                                               // 切面上那根毛囊的中心线
-const U = {dry:{value:0}, fol:{value:[]}};
+const U = {dry:{value:0}, fol:{value:[]}, col:{value:null}, nrm:{value:null}};
+{ // 照片级毛孔贴图（Human Materials 1, CC0）
+  const ld = new THREE.TextureLoader();
+  const set = t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
+  U.col.value = set(ld.load(window.SKIN_TEX.col)); U.col.value.colorSpace = THREE.SRGBColorSpace;
+  U.nrm.value = set(ld.load(window.SKIN_TEX.nrm));
+}
 
 /* ---------- 皮肤块：程序化组织纹理 ---------- */
 const NOISE = /* glsl */`
@@ -186,6 +193,8 @@ float topDisp(vec2 q,float d){
 }
 `;
 const GLSL = /* glsl */`
+uniform sampler2D uCol; uniform sampler2D uNrm;
+const float TEXS=2.4;   // 贴图每 2.4 个单位重复一次
 vec3 L(vec3 c){return pow(c,vec3(2.2));}
 float ejY(vec2 q){return surfY(q)-.52+.09*(sin(q.x*3.3+.4)+sin(q.y*3.1-.2));}
 float dbY(vec2 q){return .45+.18*sin(q.x*1.1+.3)+.14*cos(q.y*1.3);}
@@ -205,7 +214,9 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   vec3 base=mix(L(vec3(.88,.70,.58)),L(vec3(.84,.64,.53)),smoothstep(.3,.7,n2));
   base=mix(base,L(vec3(.86,.60,.52)),smoothstep(.55,.75,mot)*.35);
   base=mix(base,L(vec3(.74,.56,.45)),smoothstep(.6,.8,fbm(vec3(q*4.,12.)))*.18);
-  base*=.96+.08*grain;
+  vec3 tc=texture(uCol,q/TEXS).rgb, tavg=textureLod(uCol,vec2(.5),12.).rgb;
+  float tl=dot(tc,vec3(.3,.55,.15))/max(dot(tavg,vec3(.3,.55,.15)),.01);
+  base*=mix(1.,tl,.8);   // 只借照片的明暗细节，底色保持米桃色
   base=mix(base,base*vec3(.82,.74,.72),g1*.5+g2*.2);
   base=mix(base,L(vec3(.50,.36,.30)),pore*.55);
   float edge=smoothstep(.06,.16,v1.y)*(1.-smoothstep(.16,.3,v1.y));
@@ -309,7 +320,7 @@ vec3 skinBump(vec3 sp,vec3 n,float H,float fd){
 `;
 const skinMat = new THREE.MeshPhysicalMaterial({roughness:.5, sheen:.25, sheenRoughness:.6, sheenColor:new THREE.Color('#f5dccd'), specularIntensity:.55});
 skinMat.onBeforeCompile = sh => {
-  sh.uniforms.uDry = U.dry; sh.uniforms.uFol = U.fol;
+  sh.uniforms.uDry = U.dry; sh.uniforms.uFol = U.fol; sh.uniforms.uCol = U.col; sh.uniforms.uNrm = U.nrm;
   sh.vertexShader = sh.vertexShader
     .replace('#include <common>', '#include <common>\n' + NOISE)
     .replace('#include <begin_vertex>', '#include <begin_vertex>\nif(normal.y>.5) transformed.y += topDisp(transformed.xz, uDry);\nvWPos=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*normal);');
@@ -317,7 +328,7 @@ skinMat.onBeforeCompile = sh => {
     .replace('#include <common>', '#include <common>\n' + NOISE + GLSL)
     .replace('#include <color_fragment>', '#include <color_fragment>\nvec3 sCol; float sH, sR, sS; skinSample(vWPos, normalize(vWN), sCol, sH, sR, sS); diffuseColor.rgb = sCol;')
     .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = sR;')
-    .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = skinBump(-vViewPosition, normal, sH, faceDirection);')
+    .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = skinBump(-vViewPosition, normal, sH, faceDirection);\nif(vWN.y>.5){ vec3 tn=texture(uNrm,vWPos.xz/TEXS).xyz*2.-1.; normal=normalize(normal+(viewMatrix*vec4(tn.x*1.2,0.,-tn.y*1.2,0.)).xyz); }')
     .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += sCol*vec3(.04,.02,.014)*sS;');
 };
 const blockGeo = new THREE.BoxGeometry(2*W, TOP-BOT, 2*D, 320, 1, 256);
