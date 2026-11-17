@@ -16,7 +16,7 @@ header{position:fixed;left:32px;top:26px;pointer-events:none}
 header .brand{letter-spacing:.34em;font-size:11px;color:var(--pink)}
 header h1{font-size:30px;font-weight:600;margin-top:4px;letter-spacing:.06em}
 
-nav{position:fixed;left:32px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:2px}
+nav{z-index:2;position:fixed;left:32px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:2px}
 nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:6px 12px 6px 0;font-size:15px;color:var(--mute);transition:color .3s}
 nav button i{width:16px;height:1px;background:currentColor;opacity:.5;transition:width .35s,background .35s}
 nav button:hover{color:var(--ink)}
@@ -25,7 +25,7 @@ nav button.on i{width:34px;background:var(--pink);opacity:1}
 nav button[disabled]{cursor:default;opacity:.32}
 nav button small{font-size:10px;letter-spacing:.1em}
 
-.card{position:fixed;right:32px;bottom:32px;width:min(360px,calc(100vw - 64px));padding:22px 24px;background:rgba(32,19,20,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(234,168,177,.16);border-radius:16px;transition:opacity .35s}
+.card{z-index:2;position:fixed;right:32px;bottom:32px;width:min(360px,calc(100vw - 64px));padding:22px 24px;background:rgba(32,19,20,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(234,168,177,.16);border-radius:16px;transition:opacity .35s}
 .card.fade{opacity:0}
 .card h2{font-size:26px;font-weight:600;letter-spacing:.04em}
 .row{display:grid;grid-template-columns:50px 1fr;gap:8px;margin-top:12px}
@@ -37,13 +37,13 @@ nav button small{font-size:10px;letter-spacing:.1em}
 .meter em{font-style:normal;margin-left:auto;display:flex;align-items:center;gap:6px}
 .meter em::before{content:'';width:7px;height:7px;border-radius:50%;background:#8cc8ff;box-shadow:0 0 6px #8cc8ff}
 
-.tools{position:fixed;right:32px;top:26px;display:flex;gap:8px}
+.tools{z-index:2;position:fixed;right:32px;top:26px;display:flex;gap:8px}
 .tools button{all:unset;cursor:pointer;font-size:13px;padding:6px 14px;border-radius:99px;border:1px solid rgba(234,168,177,.25);color:var(--mute);transition:all .3s}
 .tools button.on,.tools button:hover{color:var(--ink);border-color:var(--pink)}
 
 .foot{position:fixed;left:32px;bottom:22px;font-size:12px;color:#7a6663;pointer-events:none}
 
-.lbl{position:fixed;left:0;top:0;pointer-events:none;font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:opacity .3s;will-change:transform}
+.lbl{z-index:1;position:fixed;left:0;top:0;pointer-events:none;font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:opacity .3s;will-change:transform}
 .lbl::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--pink);box-shadow:0 0 8px var(--pink);flex:none}
 .lbl span{background:rgba(18,11,12,.62);padding:1px 8px;border-radius:6px}
 body.nolabel .lbl{opacity:0!important}
@@ -91,13 +91,13 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 const STATES = [
   {id:'healthy', name:'健康肌', ready:true,
    p:{dry:0, water:.94, lipid:1},
-   cam:{pos:[12,8.5,15], tgt:[0,.6,0]},
+   cam:{pos:[14.5,9.5,18], tgt:[0,.3,0]},
    see:'有光泽，摸着软，不紧绷',
    under:'角质细胞像砖，细胞间脂质像水泥，砌得严严实实，把水锁在里面',
    care:'温和清洁、日常保湿、白天防晒，守住就好'},
   {id:'dry', name:'干燥缺水', ready:true,
    p:{dry:1, water:.38, lipid:.22},
-   cam:{pos:[5.2,6.6,9.4], tgt:[.4,3.3,2.2]},
+   cam:{pos:[8,8.2,12.5], tgt:[.2,2.7,1.2]},
    see:'紧绷、起皮、上妆卡粉，细纹更明显',
    under:'“水泥”变少，砖翘起来、缝变大，水顺着缝往外跑',
    care:'补水的同时补“水泥”（如神经酰胺）；洗脸水别太烫，别过度清洁'},
@@ -123,14 +123,14 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(innerWidth, innerHeight);
 renderer.setClearColor(0x000000, 0);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+renderer.toneMappingExposure = .82;
 renderer.localClippingEnabled = true;
 document.body.prepend(renderer.domElement);
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
-scene.environmentIntensity = .45;
+scene.environmentIntensity = .3;
 
 const camera = new THREE.PerspectiveCamera(35, innerWidth/innerHeight, .1, 200);
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -163,7 +163,7 @@ for (let row=0; row<4; row++) {
     const xx = x + (zi%2 ? .38 : 0) + (row%2 ? .25 : 0) + R(-.05,.05);
     const zz = z + (row%2 ? .3 : 0) + R(-.05,.05);
     if (nearF(xx,zz,.42)) continue;
-    bricks.push({x:xx, y:y+R(-.012,.012), z:zz, row, ry:R(0,Math.PI), ta:R(0,Math.PI*2), r1:rand(), r2:rand(), r3:rand(), base:new THREE.Color().setHSL(.07+R(-.01,.01), .42, row===3 ? .74 : .68+R(-.03,.03))});
+    bricks.push({x:xx, y:y+R(-.012,.012), z:zz, row, ry:R(0,Math.PI), ta:R(0,Math.PI*2), r1:rand(), r2:rand(), r3:rand(), base:new THREE.Color().setHSL(.055+R(-.01,.01), .5, row===3 ? .66 : .6+R(-.03,.03))});
   }
 }
 const brickMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(.43,.43,.075,6,1), mat({roughness:.42}), bricks.length);
@@ -175,7 +175,7 @@ function updBricks(p) {
     const s = 1 - .24*d*(.6 + .4*b.r1);
     const curl = d*(top ? .24 : b.row===2 ? .1 : .03)*b.r2;
     let rx = Math.cos(b.ta)*curl, rz = Math.sin(b.ta)*curl, y = b.y + (top ? d*.03*b.r2 : 0);
-    if (top && b.r3 < .14) { y += d*(.12 + .38*b.r1); rx += Math.cos(b.ta)*d*.55; rz += Math.sin(b.ta)*d*.55; }
+    if (top && b.r3 < .08) { y += d*(.08 + .22*b.r1); rx += Math.cos(b.ta)*d*.4; rz += Math.sin(b.ta)*d*.4; }
     dummy.position.set(b.x, y, b.z); dummy.rotation.set(rx, b.ry, rz); dummy.scale.set(s, 1 - .15*d, s);
     dummy.updateMatrix(); brickMesh.setMatrixAt(i, dummy.matrix);
     col.copy(b.base).lerp(dullCol, d*(top ? .55 : .3)); brickMesh.setColorAt(i, col);
@@ -195,9 +195,9 @@ for (let x=-5.2; x<=5.2; x+=.3) for (let z=-4.2; z<=4.2; z+=.3) {
   const base = ej(xx,zz); let layer = 0;
   for (let y=base+.14; y<3.52; y+=.27, layer++) {
     const gran = y > 3.25, basal = layer === 0;
-    const melano = basal && rand() < .045;
+    const melano = basal && rand() < .03;
     cells.push({x:xx+R(-.03,.03), y, z:zz+R(-.03,.03), sx: gran ? 1.25 : 1, sy: basal ? 1.3 : gran ? .6 : .95, ry:R(0,6),
-      c: melano ? new THREE.Color('#5a3122') : basal ? new THREE.Color().setHSL(.02,.42,.6) : gran ? new THREE.Color().setHSL(.06,.5,.74) : new THREE.Color().setHSL(.015,.55,.72+R(-.03,.03))});
+      c: melano ? new THREE.Color('#5a3122') : basal ? new THREE.Color().setHSL(.01,.45,.5) : gran ? new THREE.Color().setHSL(.05,.5,.64) : new THREE.Color().setHSL(.005,.5,.6+R(-.03,.03))});
   }
 }
 const cellMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.165,1), mat({roughness:.5}), cells.length);
@@ -230,9 +230,9 @@ function fiber(n, yMin, yMax, r0, r1, amp, len) {
   }
   return mergeGeometries(geos);
 }
-scene.add(new THREE.Mesh(fiber(150, -1.3, 1.6, .07, .11, .25, 5), mat({color:'#f1dcd0', roughness:.6})));
-scene.add(new THREE.Mesh(fiber(90, 1.6, 2.8, .03, .045, .15, 3), mat({color:'#f4d6cc', roughness:.6})));
-scene.add(new THREE.Mesh(fiber(70, -1.3, 2.6, .018, .026, .4, 4), mat({color:'#e8c26a', emissive:'#3a2a00', roughness:.4})));
+scene.add(new THREE.Mesh(fiber(320, -1.3, 1.6, .035, .06, .22, 4.5), mat({color:'#e6c4b8', roughness:.6})));
+scene.add(new THREE.Mesh(fiber(160, 1.6, 2.8, .018, .028, .14, 2.6), mat({color:'#eccabd', roughness:.6})));
+scene.add(new THREE.Mesh(fiber(90, -1.3, 2.6, .012, .018, .35, 3.5), mat({color:'#e8c26a', emissive:'#3a2a00', roughness:.4})));
 
 const vessels = [];
 for (let x=-4.6; x<=4.6; x+=.9) for (let z=-3.6; z<=3.6; z+=.9) {
@@ -241,10 +241,10 @@ for (let x=-4.6; x<=4.6; x+=.9) for (let z=-3.6; z<=3.6; z+=.9) {
   const w = .07;
   vessels.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(xx-w,1.3,zz), V(xx-w*.8,top-.25,zz), V(xx,top-.1,zz), V(xx+w*.8,top-.25,zz), V(xx+w,1.3,zz)]), 20, .035, 6));
 }
-for (const yy of [1.3, -1.15]) for (let i=0; i<10; i++) {
+for (const yy of [1.3, -1.15]) for (let i=0; i<6; i++) {
   const z0 = R(-D,D), pts = [];
-  for (let k=0; k<=8; k++) pts.push(V(-W-1 + k*(2*W+2)/8, yy + R(-.12,.12), z0 + R(-.4,.4)));
-  vessels.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, yy > 0 ? .05 : .08, 6));
+  for (let k=0; k<=8; k++) pts.push(V(-W-1 + k*(2*W+2)/8, yy + R(-.2,.2), z0 + Math.sin(k*1.4+i)*.5));
+  vessels.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, yy > 0 ? .04 : .065, 6));
 }
 scene.add(new THREE.Mesh(mergeGeometries(vessels), mat({color:'#b3242d', emissive:'#3a0306', roughness:.35})));
 
@@ -253,7 +253,7 @@ const fats = [];
 for (let x=-5.2; x<=5.2; x+=.9) for (let z=-4.2; z<=4.2; z+=.9) for (let y=-3.8; y<=-1.8; y+=.85)
   fats.push({x:x+R(-.12,.12), y:y+R(-.1,.1), z:z+R(-.12,.12), r:R(.4,.5)});
 const fatMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1,18,12), mat({roughness:.3, emissive:'#2a1600'}), fats.length);
-fats.forEach((f,i) => { dummy.position.set(f.x,f.y,f.z); dummy.rotation.set(0,0,0); dummy.scale.set(f.r, f.r*.9, f.r); dummy.updateMatrix(); fatMesh.setMatrixAt(i, dummy.matrix); fatMesh.setColorAt(i, col.setHSL(.12+R(-.01,.01), .75, .66+R(-.04,.04))); });
+fats.forEach((f,i) => { dummy.position.set(f.x,f.y,f.z); dummy.rotation.set(0,0,0); dummy.scale.set(f.r, f.r*.9, f.r); dummy.updateMatrix(); fatMesh.setMatrixAt(i, dummy.matrix); fatMesh.setColorAt(i, col.setHSL(.11+R(-.01,.01), .7, .55+R(-.04,.04))); });
 scene.add(fatMesh);
 
 /* 真皮基质、脂肪层的半透明底色 */
@@ -265,7 +265,7 @@ scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2
 /* ---------- 毛囊、皮脂腺、汗腺 ---------- */
 const folMat = mat({color:'#d99a8c', roughness:.5});
 const hairMat = mat({color:'#2b1a14', roughness:.35});
-const glandMat = mat({color:'#f0cf7c', roughness:.35, emissive:'#2a1a00'});
+const glandMat = mat({color:'#e8b35a', roughness:.35, emissive:'#2a1a00'});
 const glands = [];
 for (const f of FOL) {
   const prof = [[.05,f.bot-.25],[.2,f.bot-.2],[.38,f.bot],[.36,f.bot+.3],[.27,f.bot+.9],[.26,1],[.27,3],[.31,4.0]].map(([r,y]) => new THREE.Vector2(r,y));
@@ -299,7 +299,7 @@ for (let i=0; i<NW; i++) {
   const x = R(-4.8,4.8), z = R(-3.8,3.8), inSC = rand() < .45;
   const y = inSC ? R(3.62,3.92) : R(ej(x,z)+.1, 3.5);
   wBase.push({x, y, z, r:rand(), ph:R(0,6), sp:R(.7,1.3), leak:false, t0:0, a:0});
-  wS[i] = R(.09,.14);
+  wS[i] = R(.16,.24);
 }
 const wGeo = new THREE.BufferGeometry();
 wGeo.setAttribute('position', new THREE.BufferAttribute(wPos,3));
@@ -310,7 +310,7 @@ const water = new THREE.Points(wGeo, new THREE.ShaderMaterial({
   uniforms:{uPR:{value:renderer.getPixelRatio()}},
   vertexShader:`attribute float aA; attribute float aS; uniform float uPR; varying float vA;
     void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); gl_PointSize = aS*uPR*900./-mv.z; gl_Position = projectionMatrix*mv; vA = aA; }`,
-  fragmentShader:`varying float vA; void main(){ float d = length(gl_PointCoord-.5); float a = smoothstep(.5,.05,d)*vA; if(a<.01) discard; gl_FragColor = vec4(.5,.78,1.,a); }`
+  fragmentShader:`varying float vA; void main(){ float d = length(gl_PointCoord-.5); float a = smoothstep(.5,.05,d)*vA; if(a<.01) discard; gl_FragColor = vec4(.35,.7,1.,a); }`
 }));
 water.frustumCulled = false; scene.add(water);
 let nIn = 0, nOut = 0;
@@ -341,7 +341,7 @@ function updWater(t, p) {
 /* ---------- 标注 ---------- */
 const LABELS = [
   ['角质层', [-W,3.8,D]], ['表皮', [-W,3.0,D]], ['真皮', [-W,.6,D]], ['皮下脂肪', [-W,-2.8,D]],
-  ['毛囊', [FOL[0].x+.3,.2,FOL[0].z]], ['皮脂腺', [FOL[0].x+.8,1.9,FOL[0].z]], ['汗腺', [-.3,-1.15,2.4]], ['毛细血管', [-W,1.3,1.5]],
+  ['毛囊', [FOL[0].x+.3,.2,FOL[0].z]], ['皮脂腺', [FOL[0].x+.6,1.9,FOL[0].z]], ['汗腺', [-.3,-1.15,2.4]], ['毛细血管', [-W,1.3,1.5]],
 ].map(([t,p]) => { const el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = `<span>${t}</span>`; document.body.appendChild(el); return {el, v:V(...p)}; });
 const tmp = new THREE.Vector3();
 function updLabels() {
@@ -393,7 +393,8 @@ const setLabel = on => { bLabel.classList.toggle('on', on); document.body.classL
 bLabel.onclick = () => setLabel(!bLabel.classList.contains('on'));
 setLabel(localStorage.getItem('hymnSkin.label') !== '0');
 
-const saved = STATES.find(s => s.id === localStorage.getItem('hymnSkin.state') && s.ready) || STATES[0];
+const want = location.hash.slice(1) || localStorage.getItem('hymnSkin.state');
+const saved = STATES.find(s => s.id === want && s.ready) || STATES[0];
 Object.assign(cur, saved.p);
 select(saved, true);
 updBricks(cur); updCells(cur);
