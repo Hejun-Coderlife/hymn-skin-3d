@@ -354,7 +354,7 @@ const block = new THREE.Mesh(blockGeo, skinMat); scene.add(block);
 const hairMat = new THREE.MeshPhysicalMaterial({color:'#7a5a46', roughness:.4, sheen:.6, sheenColor:new THREE.Color('#d8b8a0'), transparent:true, opacity:.9});
 function hair(x, z, len, yaw, tilt, sink=.05) {
   // 以固定斜角从毛孔长出，基本是直的，整根只有轻微弧度；根粗梢细
-  const pts = [], bend = R(.04,.1);
+  const pts = [], bend = R(.02,.05);
   for (let k=0; k<=12; k++) { const l = k/12*len; pts.push(V(Math.sin(tilt)*l + bend*l*l, Math.cos(tilt)*l - bend*.4*l*l, 0)); }
   const curve = new THREE.CatmullRomCurve3(pts), seg = 40, rad = 6;
   const g = new THREE.TubeGeometry(curve, seg, .014, rad, false);
@@ -369,11 +369,11 @@ function hair(x, z, len, yaw, tilt, sink=.05) {
 const fol = [];
 for (let i=0; i<14; i++) {
   let x, z; do { x = R(-4.4,4.4); z = R(-3.4,3.4); } while (fol.some(f => f.distanceTo(new THREE.Vector2(x,z)) < 1.2));
-  fol.push(new THREE.Vector2(x,z)); hair(x, z, R(.45,.85), R(0,6.28), R(.75,1.05));   // 脸上的毫毛：细、短、颜色浅
+  fol.push(new THREE.Vector2(x,z)); hair(x, z, R(1.8,2.8), R(0,6.28), R(.8,1.1));   // 露在外面的比毛根长   // 脸上的毫毛：细、短、颜色浅
 }
 U.fol.value = fol;
 // 切面那根毛囊伸出表面的部分
-hair(fxY(surfY(fxY(3.9),D)), D-.016, .8, 0, Math.atan(.18), .1);
+hair(fxY(surfY(fxY(3.9),D)), D-.016, 3.2, 0, Math.atan(.18), .1);
 
 /* ---------- 切面上的血管、汗腺（略凸出切面，像解剖标本） ---------- */
 const artMat = new THREE.MeshPhysicalMaterial({color:'#a0262c', roughness:.32, clearcoat:.5, clearcoatRoughness:.3});
