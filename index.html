@@ -83,7 +83,6 @@ body.nolabel .lbl{opacity:0!important}
   <div class="stages" id="stages" style="display:none"><button data-v=".33">① 毛孔堵住</button><button data-v=".66">② 皮脂积住</button><button data-v="1">③ 发炎红肿</button></div>
   <div class="meter"><div>正从表面跑掉的水汽<b id="mOut">0</b></div><em>水汽（示意）</em></div>
 </div>
-<div class="foot">示意图：各层厚度做了放大，不是真实比例 · 拖动旋转，双指缩放 · 表面贴图 Human Materials 1 (CC0, Sketchfab)</div>
 
 <script src="textures/skin_tex.js"></script>
 <script type="module">
@@ -900,7 +899,8 @@ addEventListener('resize', () => {
 });
 const clock = new THREE.Clock();
 const ease = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
-let lastMeter = 0, dirty = 3, ft = 1/60, fc = 0;
+let lastMeter = 0, dirty = 3, ft = 1/60, fc = 0, idleT = 0, hiOn = false, lastHi = 0;
+const HI = Math.min(devicePixelRatio, 2);
 controls.addEventListener('change', () => dirty = 2);
 addEventListener('resize', () => dirty = 2);
 document.addEventListener('click', () => dirty = 2);
@@ -919,12 +919,20 @@ renderer.setAnimationLoop(() => {
   const camMoved = controls.update() || camTween || controls.autoRotate;
   const busy = moved || camMoved || cur.leak > .2 || dirty > 0;
   if (dirty > 0) dirty--;
-  if (busy) {
+  // 动的时候用省力分辨率，停下 0.2 秒后换满分辨率（Retina 2x）重画，静止画面清晰
+  const motion = moved || camMoved;
+  idleT = motion ? 0 : idleT + dt;
+  const wantHi = idleT > .2;
+  const sw = wantHi !== hiOn;   // 换分辨率会清空画布，当帧必须重画，否则闪一下
+  if (sw) { hiOn = wantHi; renderer.setPixelRatio(hiOn ? HI : PR); }
+  if (sw || busy && (!hiOn || dirty > 0 || t - lastHi > 1/24)) {   // 静止时只有水汽粒子在动，24 帧够了
+    if (hiOn) lastHi = t;
     renderer.render(scene, camera);
     updLabels();
-    // 帧率跟不上就自动降一点清晰度（最低 0.75）
-    ft = ft*.92 + dt*.08;
-    if (++fc > 60 && ft > 1/40 && PR > .75) { PR = Math.max(.75, PR - .15); renderer.setPixelRatio(PR); fc = 0; dirty = 2; }
+    if (!hiOn) {   // 帧率跟不上就自动降一点清晰度（最低 0.75）
+      ft = ft*.92 + dt*.08;
+      if (++fc > 60 && ft > 1/40 && PR > .75) { PR = Math.max(.75, PR - .15); renderer.setPixelRatio(PR); fc = 0; dirty = 2; }
+    }
   }
   if (t - lastMeter > .25) { lastMeter = t; document.getElementById('mOut').textContent = nOut; }
 });
