@@ -94,7 +94,7 @@ const STATES = [
    care:'温和清洁、日常保湿、白天防晒，守住就好'},
   {id:'dry', name:'干燥缺水', ready:true,
    p:{dry:1, leak:.7},
-   cam:{pos:[7.6,7.4,11.5], tgt:[.9,2.9,1.6]},
+   cam:{pos:[9.8,8.4,13.8], tgt:[1.3,2.3,1.2]},
    see:'紧绷、起皮、上妆卡粉，细纹更明显',
    under:'细胞间脂质变少，角质翘起、皮纹变深，水从表面加速跑掉',
    care:'补水的同时补脂质（如神经酰胺）；洗脸水别太烫，别过度清洁'},
@@ -119,13 +119,13 @@ const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = .82;
 document.body.prepend(renderer.domElement);
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
-scene.environmentIntensity = .55;
+scene.environmentIntensity = .4;
 {
   const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 1024;
   const g = cv.getContext('2d');
@@ -190,12 +190,12 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   vec3 vp=voro2(q*2.4+11.); pore=max(pore,step(.6,vp.z)*(1.-smoothstep(.0,.04,vp.x))*.7);
   vec3 vf=voro2(q*3.+5.); float flake=step(.42,vf.z); float rim=flake*(1.-smoothstep(0.,.08,vf.y));
   H=-cr1*(.02+.025*d)-cr2*(.006+.008*d)-pore*.03+n*.007+d*(flake*.012+rim*.01);
-  vec3 base=mix(L(vec3(.93,.74,.64)),L(vec3(.90,.66,.58)),smoothstep(.35,.65,n2));
+  vec3 base=mix(L(vec3(.90,.68,.58)),L(vec3(.86,.60,.52)),smoothstep(.35,.65,n2));
   base*=.95+.1*n;
-  base=mix(base,base*vec3(.84,.74,.72),cr1*.55+cr2*.2);
+  base=mix(base,base*vec3(.72,.6,.58),cr1*.7+cr2*.3);
   base=mix(base,L(vec3(.55,.36,.31)),pore*.5);
-  vec3 dc=mix(base,L(vec3(.90,.82,.76)),.35);
-  dc=mix(dc,L(vec3(.98,.95,.91)),rim*.8+flake*.15+cr1*.2);
+  vec3 dc=mix(base,L(vec3(.88,.78,.72)),.45);
+  dc=mix(dc,L(vec3(.99,.96,.93)),rim*.95+flake*.3+cr1*.55+cr2*.3);
   c=mix(base,dc,d);
   r=mix(.4+cr1*.15,.8,d); s=1.;
 }
@@ -203,10 +203,10 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
 void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
   vec2 q=p.xz; float d=uDry;
   float ej=ejY(q), db=dbY(q)+(fbm(p*1.3)-.5)*.35;
-  float scT=4.-(.045+.05*d);
+  float scT=4.-(.045+.08*d);
   H=0.; r=.55; s=0.;
   if(p.y>scT){
-    float lam=sin(p.y*300.+fbm(p*18.)*5.)*.5+.5;
+    float lam=sin(p.y*110.+fbm(p*10.)*4.)*.5+.5;
     c=mix(L(vec3(.97,.90,.82)),L(vec3(.90,.79,.70)),lam*.35);
     vec3 vc=voro(vec3(p.x*7.,p.y*1.5,p.z*7.));
     float crack=d*(1.-smoothstep(0.,.06,vc.y));
@@ -215,7 +215,7 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
   } else if(p.y>ej){
     float t=clamp((p.y-ej)/(scT-ej),0.,1.);
     vec3 v=voro(p*vec3(15.,15.+t*18.,15.));
-    vec3 cc=mix(L(vec3(.88,.62,.55)),L(vec3(.93,.73,.63)),t);
+    vec3 cc=mix(L(vec3(.84,.52,.47)),L(vec3(.90,.66,.57)),t);
     cc*=.93+.1*v.z;
     cc=mix(cc,L(vec3(.97,.84,.77)),(1.-smoothstep(0.,.09,v.y))*.45);
     cc=mix(cc,L(vec3(.60,.38,.42)),(1.-smoothstep(.12,.2,v.x))*.4*(1.-t*.8));
@@ -225,25 +225,29 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     H=(1.-v.x)*.007+(1.-smoothstep(0.,.09,v.y))*.003; r=.5; s=1.;
   } else if(p.y>db){
     float pap=smoothstep(ej-.45,ej-.2,p.y);
-    float f=fbm(vec3(p.x*1.4,p.y*9.,p.z*1.4)+fbm(p*2.)*2.);
-    float bundle=smoothstep(.42,.6,f);
-    vec3 ret=mix(L(vec3(.92,.70,.66)),L(vec3(.98,.88,.84)),bundle);
+    float wv=fbm(vec3(p.x*1.2,p.y*3.,p.z*1.2))*14.;
+    float fib=sin(p.y*46.+wv+sin((p.x+p.z)*9.)*.8)*.5+.5;
+    float f=fbm(vec3(p.x*1.6,p.y*7.,p.z*1.6)+fbm(p*2.)*2.);
+    float bundle=smoothstep(.38,.62,f)*.6+fib*.4*smoothstep(.3,.6,f);
+    vec3 ret=mix(L(vec3(.86,.58,.55)),L(vec3(.97,.85,.80)),bundle);
     float f2=fbm(vec3(p.x*7.,p.y*22.,p.z*7.));
-    vec3 papC=mix(L(vec3(.95,.74,.70)),L(vec3(.99,.87,.83)),smoothstep(.4,.6,f2));
+    vec3 papC=mix(L(vec3(.92,.66,.62)),L(vec3(.98,.84,.80)),smoothstep(.4,.6,f2));
     c=mix(ret,papC,pap);
     float el=1.-smoothstep(0.,.02,abs(fbm(p*vec3(2.,6.,2.)+7.)-.5));
     c=mix(c,L(vec3(.95,.82,.55)),el*.5*(1.-pap));
     H=bundle*.014*(1.-pap)+f2*.004*pap; r=.55; s=.6;
   } else {
-    vec3 lob=voro(p*1.35);
-    float septa=1.-smoothstep(.03,.09,lob.y);
-    vec3 cell=voro(p*6.5+lob.z*10.);
-    float ce=1.-smoothstep(.0,.07,cell.y);
-    vec3 fatC=mix(L(vec3(.99,.86,.52)),L(vec3(.95,.74,.38)),cell.z*.5+cell.x*.4);
-    fatC=mix(fatC,L(vec3(1.,.95,.80)),ce*.6);
-    c=mix(fatC,L(vec3(.95,.80,.74)),septa);
+    vec2 fuv=abs(nw.z)>.5?p.xy:abs(nw.x)>.5?p.zy:p.xz;
+    vec3 lob=voro2(fuv*.95);
+    float septa=1.-smoothstep(.02,.06,lob.y);
+    vec3 cell=voro2(fuv*3.4+lob.z*10.);
+    float ce=1.-smoothstep(.0,.05,cell.y);
+    float dome=1.-smoothstep(.0,.75,cell.x); dome=sqrt(max(dome,0.));
+    vec3 fatC=mix(L(vec3(.93,.70,.30)),L(vec3(1.,.90,.58)),dome*.8+cell.z*.2);
+    fatC=mix(fatC,L(vec3(.80,.56,.30)),ce*.55);
+    c=mix(fatC,L(vec3(.93,.74,.68)),septa);
     c=mix(c,L(vec3(.96,.82,.76)),(1.-smoothstep(0.,.12,db-p.y))*.6);
-    H=(1.-cell.x)*.03*(1.-septa)-septa*.01; r=mix(.28,.5,septa); s=.3;
+    H=dome*.05*(1.-septa)-septa*.02; r=mix(.22,.5,septa); s=.3;
   }
   /* 正面切面上：毛囊、皮脂腺、立毛肌 */
   if(nw.z>.5 && p.y>.6 && p.y<4.){
@@ -284,7 +288,7 @@ vec3 skinBump(vec3 sp,vec3 n,float H,float fd){
   return normalize(abs(det)*n-g);
 }
 `;
-const skinMat = new THREE.MeshPhysicalMaterial({roughness:.5, sheen:.5, sheenRoughness:.6, sheenColor:new THREE.Color('#ffb2a0'), specularIntensity:.55});
+const skinMat = new THREE.MeshPhysicalMaterial({roughness:.5, sheen:.25, sheenRoughness:.6, sheenColor:new THREE.Color('#ffb2a0'), specularIntensity:.55});
 skinMat.onBeforeCompile = sh => {
   sh.uniforms.uDry = U.dry; sh.uniforms.uFol = U.fol;
   sh.vertexShader = sh.vertexShader
@@ -295,7 +299,7 @@ skinMat.onBeforeCompile = sh => {
     .replace('#include <color_fragment>', '#include <color_fragment>\nvec3 sCol; float sH, sR, sS; skinSample(vWPos, normalize(vWN), sCol, sH, sR, sS); diffuseColor.rgb = sCol;')
     .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = sR;')
     .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = skinBump(-vViewPosition, normal, sH, faceDirection);')
-    .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += sCol*vec3(.14,.045,.03)*sS;');
+    .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += sCol*vec3(.07,.022,.015)*sS;');
 };
 const block = new THREE.Mesh(new THREE.BoxGeometry(2*W, TOP-BOT, 2*D), skinMat);
 block.position.y = (TOP+BOT)/2; scene.add(block);
@@ -319,8 +323,8 @@ U.fol.value = fol;
 hair(fxY(4), D-.06, 1.6, 0, .18);
 
 /* ---------- 切面上的血管、汗腺（略凸出切面，像解剖标本） ---------- */
-const artMat = new THREE.MeshPhysicalMaterial({color:'#b3252c', roughness:.32, clearcoat:.5, clearcoatRoughness:.3});
-const veinMat = new THREE.MeshPhysicalMaterial({color:'#3d4f96', roughness:.32, clearcoat:.5, clearcoatRoughness:.3});
+const artMat = new THREE.MeshPhysicalMaterial({color:'#a0262c', roughness:.32, clearcoat:.5, clearcoatRoughness:.3});
+const veinMat = new THREE.MeshPhysicalMaterial({color:'#3f4d8c', roughness:.32, clearcoat:.5, clearcoatRoughness:.3});
 const capMat = new THREE.MeshPhysicalMaterial({color:'#c8333b', roughness:.35});
 const ductMat = new THREE.MeshPhysicalMaterial({color:'#f2cfc4', roughness:.4, sheen:.5, sheenColor:new THREE.Color('#ffd0c0')});
 const tube = (pts, r, m) => scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.max(24, pts.length*6), r, 10), m));
@@ -393,11 +397,11 @@ const SW = {x:.9, y:dbY(.9, D) + .42};
 }
 
 /* ---------- 干燥：翘起的皮屑 ---------- */
-const flakeGeo = new THREE.PlaneGeometry(1, 1, 6, 6); flakeGeo.rotateX(-Math.PI/2);
+const flakeGeo = new THREE.CircleGeometry(.5, 14, 0, Math.PI*2); flakeGeo.scale(1,.75,1); flakeGeo.rotateX(-Math.PI/2);
 { const p = flakeGeo.attributes.position; for (let i=0; i<p.count; i++) { const x = p.getX(i), z = p.getZ(i); p.setY(i, .28*x*x + .12*z*z); } flakeGeo.computeVertexNormals(); }
 const flakes = [];
-for (let i=0; i<170; i++) flakes.push({x:R(-W+.3,W-.3), z:R(-D+.3,D-.3), s:R(.14,.34), ry:R(0,6.28), tilt:R(.08,.45), lift:R(0,.05)});
-const flakeMesh = new THREE.InstancedMesh(flakeGeo, new THREE.MeshPhysicalMaterial({color:'#f3e5da', roughness:.85, side:THREE.DoubleSide, sheen:.5, sheenColor:new THREE.Color('#ffffff')}), flakes.length);
+for (let i=0; i<220; i++) flakes.push({x:R(-W+.3,W-.3), z:R(-D+.3,D-.3), s:R(.12,.3), ry:R(0,6.28), tilt:R(.08,.45), lift:R(0,.05)});
+const flakeMesh = new THREE.InstancedMesh(flakeGeo, new THREE.MeshPhysicalMaterial({color:'#e9cfc2', roughness:.75, side:THREE.DoubleSide, transparent:true, opacity:.85, sheen:.6, sheenColor:new THREE.Color('#fff4ee')}), flakes.length);
 flakeMesh.frustumCulled = false; scene.add(flakeMesh);
 const dummy = new THREE.Object3D();
 function updFlakes(d) {
