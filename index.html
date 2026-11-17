@@ -152,7 +152,9 @@ const rim = new THREE.DirectionalLight(0xffd6dc, 1.6); rim.position.set(2,6,-10)
 /* ---------- 尺寸与层界（JS 与着色器共用同一套公式） ---------- */
 const W = 5, D = 4, TOP = 3.9, BOT = -1.3;
 const surfY = (x,z) => TOP + .1*Math.sin(x*.8+.3)*Math.cos(z*.9-.5) + .05*Math.sin(x*1.9-z*1.3+1.);   // 皮肤表面起伏
-const ejY = (x,z) => surfY(x,z) - .85 + .12*(Math.sin(x*3.3+.4) + Math.sin(z*3.1-.2));     // 表皮/真皮交界
+const ridge = (x,z) => .08*(Math.sin(x*3.3+.4) + Math.sin(z*3.1-.2)) + .03*Math.sin(x*8.3-z*6.1+1.7)
+  - .16*Math.pow(.5+.5*Math.sin(x*6.1+1.1+.7*Math.sin(x*2.3)), 6) - .12*Math.pow(.5+.5*Math.sin(z*5.7-.4+.7*Math.sin(z*1.9)), 6);   // 向下伸的表皮突，宽窄长短不一
+const ejY = (x,z) => surfY(x,z) - .82 + ridge(x,z);     // 表皮/真皮交界
 const dbY = (x,z) => .25 + .15*Math.sin(x*1.1+.3) + .12*Math.cos(z*1.3);       // 真皮/脂肪交界
 const fxY = y => -2 + (y-.7)*.18;                                               // 切面上那根毛囊的中心线
 const U = {dry:{value:0}, fol:{value:[]}, col:{value:null}, nrm:{value:null}};
@@ -198,7 +200,10 @@ const GLSL = /* glsl */`
 uniform sampler2D uCol; uniform sampler2D uNrm;
 const float TEXS=2.4;   // 贴图每 2.4 个单位重复一次
 vec3 L(vec3 c){return pow(c,vec3(2.2));}
-float ejY(vec2 q){return surfY(q)-.85+.12*(sin(q.x*3.3+.4)+sin(q.y*3.1-.2));}
+float ejY(vec2 q){float x=q.x,z=q.y;
+  float r=.08*(sin(x*3.3+.4)+sin(z*3.1-.2))+.03*sin(x*8.3-z*6.1+1.7)
+    -.16*pow(.5+.5*sin(x*6.1+1.1+.7*sin(x*2.3)),6.)-.12*pow(.5+.5*sin(z*5.7-.4+.7*sin(z*1.9)),6.);
+  return surfY(q)-.82+r;}
 float dbY(vec2 q){return .25+.15*sin(q.x*1.1+.3)+.12*cos(q.y*1.3);}
 float segD(vec2 p,vec2 a,vec2 b){vec2 pa=p-a,ba=b-a;float h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.);return length(pa-ba*h);}
 
@@ -259,21 +264,20 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     float pap=smoothstep(ej-.75,ej-.4,p.y);
     vec2 du=abs(nw.z)>.5?p.xy:p.zy;
     vec2 wq=du+(vec2(fbm(vec3(du*.8,3.)),fbm(vec3(du*.8,6.)))-.5)*.8;
-    float ang=(fbm(vec3(du*.5,11.))-.5)*1.1;                        // 每个区域纤维走向略有不同
-    vec2 rq=mat2(cos(ang),-sin(ang),sin(ang),cos(ang))*wq;
-    float yy=rq.y*4.2+sin(rq.x*1.8+fbm(vec3(du*1.1,3.))*3.)*.25;     // 波浪状的束
-    float bi=floor(yy), bf=fract(yy);
-    float seg=h13(vec3(bi,floor(rq.x*.6+bi*.37),1.));                // 束有长有短，会断开
-    float body=smoothstep(0.,.1,bf)*smoothstep(1.,.9,bf)*step(.15,seg);
-    float fib=sin(bf*3.14159*4.+fbm(vec3(rq*4.,5.))*2.)*.5+.5; fib=mix(.5,fib,1.-smoothstep(.04,.12,fwidth(yy)));        // 束内平行细纤维
-    float bundle=body*(.78+.22*fib);
-    vec3 ret=mix(L(vec3(.78,.47,.45)),L(vec3(.95,.76,.71))*(.92+.08*seg),bundle);
+    float n1=fbm(vec3(wq.x*1.6,wq.y*7.,1.));
+    float n2=fbm(vec3(wq.x*1.0+wq.y*.7,wq.y*7.,4.));               // 第二组束，走向略斜，和第一组交织
+    float b1=smoothstep(.42,.62,n1), b2=smoothstep(.47,.66,n2);
+    float bundle=max(b1,b2*.85);
+    float sf=fwidth(wq.y)*26.;
+    float fib=mix(.5,fbm(vec3(wq.x*2.2,wq.y*26.,2.)),1.-smoothstep(.25,.7,sf));   // 束内细纤维，远看自动淡出
+    vec3 ret=mix(L(vec3(.86,.57,.54)),L(vec3(.95,.76,.71)),bundle);
+    ret*=mix(1.,.92+.16*fib,bundle);
     float f2=fbm(vec3(du*9.,4.)); float thin=1.-smoothstep(0.,.06,abs(f2-.5));
     vec3 papC=mix(L(vec3(.90,.60,.56)),L(vec3(.97,.80,.75)),thin*.8);
     c=mix(ret,papC,pap);
     float el=1.-smoothstep(0.,.018,abs(fbm(vec3(wq.x*2.,wq.y*5.,7.))-.5));
     c=mix(c,L(vec3(.95,.82,.55)),el*.45*(1.-pap));
-    H=(sin(bf*3.14159)*body*.02+fib*body*.003)*(1.-pap)+thin*.004*pap; r=.55; s=.6;
+    H=bundle*.01*(1.-pap)+thin*.003*pap; r=.55; s=.6;
   } else {
     vec2 fuv=abs(nw.z)>.5?p.xy:abs(nw.x)>.5?p.zy:p.xz;
     fuv+=(vec2(fbm(vec3(fuv*.55,2.)),fbm(vec3(fuv*.55,7.)))-.5)*1.3;   // 扭弯，真实间隔膜没有直线
@@ -317,9 +321,16 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
       float m=smoothstep(1.,.9,gd); c=mix(c,gc,m); H+=m*((1.-v.x)*.012+(1.-gd*gd)*.03); s=.6;
     }
     if(gduct<.04){float m=smoothstep(.04,.025,gduct); c=mix(c,L(vec3(.96,.86,.66)),m); H+=m*.012;}
-    vec2 a=vec2(-2.+(1.95-.7)*.18+.15,1.95), cpt=vec2(a.x+1.25,1.95), b=vec2(cpt.x+.4,ejY(vec2(cpt.x+.4,p.z))-.06);
-    float ad=min(segD(p.xy,a,cpt),segD(p.xy,cpt,b));
-    if(ad<.05){float m=smoothstep(.05,.03,ad);c=mix(c,L(vec3(.80,.44,.44))*(.9+.1*sin(dot(p.xy,vec2(70.,-25.)))),m);H+=m*.012;}
+    vec2 A=vec2(-2.+(1.95-.7)*.18+.15,1.95), Bp=vec2(A.x+1.65,ejY(vec2(A.x+1.65,p.z))-.07), C=vec2(A.x+1.25,1.72);
+    float best=9., bt=0.;
+    for(int i=0;i<10;i++){ float t0=float(i)/10., t1=float(i+1)/10.;
+      vec2 P0=mix(mix(A,C,t0),mix(C,Bp,t0),t0), P1=mix(mix(A,C,t1),mix(C,Bp,t1),t1);
+      vec2 pa=p.xy-P0, ba=P1-P0; float hh=clamp(dot(pa,ba)/dot(ba,ba),0.,1.); float dd=length(pa-ba*hh);
+      if(dd<best){best=dd; bt=mix(t0,t1,hh);} }
+    float mw=.016+.034*sin(3.14159*bt);
+    if(best<mw){ float u=best/mw; float m=smoothstep(1.,.75,u);
+      vec3 mc=L(vec3(.78,.42,.42))*(.88+.12*sin(u*14.+bt*3.));
+      c=mix(c,mc,m*.95); H+=m*(1.-u*u)*.016; }
   }
 }
 void skinSample(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
@@ -422,7 +433,9 @@ for (const f of ['f','r','b','l']) {
     let h = -span + R(0,.3);
     while (h < span - .2) {
       const len = R(.6, 1.9), pts = [], ph = R(0,6), fq = R(2.5,4.5);
-      for (let x=h; x<=Math.min(h+len, span-.03); x+=.15) { if (sk(x)) break; pts.push(onFace(f, x, fn(x) + Math.sin(x*fq+ph)*yj, r0*.45)); }
+      const xe = Math.min(h+len, span-.03);
+      for (let x=h; x<=xe; x+=.15) { if (sk(x)) break; const e = Math.min(x-h, xe-x)/Math.max(.01,xe-h);
+        pts.push(onFace(f, x, fn(x) + Math.sin(x*fq+ph)*yj, r0*.45 + r0*2.4*(1-Math.min(1,e/.22)))); }   // 两端斜着钻进切面
       if (pts.length > 2) tube(pts, r0*R(.8,1.15), m);
       h += len + R(.15,.6);
     }
@@ -432,18 +445,17 @@ for (const f of ['f','r','b','l']) {
   segRun(up, .032, artMat, skip, .025);
   segRun(upV, .036, veinMat, skip, .025);
   // 烛台状上行血管：主干弯曲上行，到浅层分 2~3 支
-  const climbs = Math.round(span*.9);
-  for (let i=0; i<climbs; i++) {
-    const h = -span + (i+.5)*(2*span/climbs) + R(-.35,.35);
+  const climbXs = []; for (let h=-span+R(.3,.8); h<span-.3; h+=R(.6,1.6)) climbXs.push(h);
+  for (const h of climbXs) {
     if (skip(h)) continue;
-    const art = rand() < .55, y0 = art ? deepA(h) : deepV(h), ym = (y0 + up(h))*.5 + R(-.2,.2), r = art ? .03 : .034, m = art ? artMat : veinMat;
-    const trunk = []; const ph = R(0,6);
-    for (let k=0; k<=5; k++) { const t = k/5; trunk.push(onFace(f, h + Math.sin(t*3+ph)*.1, y0 + (ym-y0)*t, r*.45)); }
+    const art = rand() < .55, y0 = art ? deepA(h) : deepV(h), ym = y0 + (up(h)-y0)*R(.35,.75), r = (art ? .03 : .034)*R(.8,1.2), m = art ? artMat : veinMat;
+    const trunk = []; const ph = R(0,6), sway = R(.04,.16);
+    for (let k=0; k<=6; k++) { const t = k/6; trunk.push(onFace(f, h + Math.sin(t*R(2,4)+ph)*sway, y0 + (ym-y0)*t, r*.45)); }
     tube(trunk, r, m);
-    const nb = 2 + (rand() < .5 ? 1 : 0);
+    const nb = 1 + Math.floor(rand()*3.2);
     for (let j=0; j<nb; j++) {
-      const dx = (j - (nb-1)/2)*R(.2,.35), yt = (art ? up(h+dx) : upV(h+dx)) + R(-.08,.05);
-      tube([onFace(f,h,ym-.03,.012), onFace(f,h+dx*.12,ym+(yt-ym)*.35,.012), onFace(f,h+dx*.6,ym+(yt-ym)*.78,.012), onFace(f,h+dx,yt,.012)], r*.72, m);   // Y 形分叉，先竖直再散开
+      const dx = R(-.5,.5), yt = (art ? up(h+dx) : upV(h+dx)) + R(-.12,.06), bx = h + Math.sin(ph)*sway;
+      tube([onFace(f,bx,ym-.03,.012), onFace(f,bx+dx*R(.05,.25),ym+(yt-ym)*R(.25,.45),.012), onFace(f,bx+dx*R(.55,.8),ym+(yt-ym)*R(.7,.85),.012), onFace(f,bx+dx,yt,.012)], r*R(.55,.8), m);
     }
   }
   // 毛细血管袢：高矮不一、间距不均、有的歪、有的只切到一侧
@@ -529,12 +541,18 @@ const NERVE = {};
   // 环层小体：同心层，切面像洋葱
   const cv = document.createElement('canvas'); cv.width = cv.height = 256;
   const g = cv.getContext('2d');
-  for (let i=14; i>=1; i--) { g.beginPath(); g.arc(128,128,i*9,0,Math.PI*2); g.fillStyle = i%2 ? '#efe2c4' : '#d8c094'; g.fill(); }
-  g.beginPath(); g.arc(128,128,9,0,Math.PI*2); g.fillStyle = '#b08848'; g.fill();
+  let rr = 124;
+  for (let i=0; rr > 8; i++) {       // 层片厚薄不均、略有起伏
+    g.beginPath();
+    for (let a=0; a<=64; a++) { const t = a/64*Math.PI*2, w = rr*(1 + .04*Math.sin(t*3+i) + .03*Math.sin(t*5-i*2)); const x = 128+Math.cos(t)*w, y = 128+Math.sin(t)*w; a ? g.lineTo(x,y) : g.moveTo(x,y); }
+    g.fillStyle = i%2 ? '#efe0c2' : '#dcc39a'; g.fill();
+    rr -= 4 + rand()*9;
+  }
+  g.beginPath(); g.ellipse(128,128,10,7,0,0,Math.PI*2); g.fillStyle = '#b08848'; g.fill();
   const onion = new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(cv), roughness:.45}); onion.map.colorSpace = THREE.SRGBColorSpace;
   const pac = (f, h) => {
     const [x,z] = faceXZ(f,h), y = (BOT + dbY(x,z))/2 + .1;
-    const m = new THREE.Mesh(new THREE.CircleGeometry(.24, 40), onion); m.scale.set(1.5, 1, 1); m.position.copy(onFace(f, h, y, -.004));
+    const m = new THREE.Mesh(new THREE.CircleGeometry(.15, 40), onion); m.scale.set(1.7, 1, 1); m.rotateZ(R(-.3,.3)); m.position.copy(onFace(f, h, y, -.004));
     const sg = (f === 'f' || f === 'r') ? 1 : -1; m.rotation.y = alongX(f) ? (sg > 0 ? 0 : Math.PI) : sg*Math.PI/2; scene.add(m);
     nerve(f, h - .7, dbY(x,z) + .35, h - .3, y + .02);
     return m.position.clone();
