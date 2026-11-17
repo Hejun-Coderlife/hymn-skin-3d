@@ -324,6 +324,19 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   float redC=1.-smoothstep(.1,.32,ld+edgeN*.6);
   vec3 tint=mix(vec3(.80,.64,.56),vec3(.98,.6,.58),redC)*(.94+.1*fbm(vec3(q*14.,5.)));   // 外褐内红，带斑驳
   c*=mix(vec3(1.),tint,mk);
+  // 其它地方散着的痘印：大小不一，新的偏红、旧的偏褐（x, z, 半径, 红的程度）
+  if(uMark>.001){
+    vec4 MK[8]=vec4[8](vec4(-2.6,-1.8,.30,.9),vec4(1.2,-2.4,.24,.2),vec4(2.8,.6,.34,.7),vec4(-.4,.9,.20,0.),
+                       vec4(3.6,-1.7,.22,.5),vec4(-3.4,1.6,.28,.3),vec4(.8,2.6,.26,.85),vec4(-1.2,-.5,.18,.1));
+    for(int i=0;i<8;i++){
+      vec2 dq=(q-MK[i].xy)/MK[i].z;
+      float dn=length(dq)+(fbm(vec3(dq*2.2,float(i)*3.1))-.5)*.7+(fbm(vec3(dq*6.,float(i)+20.))-.5)*.22;   // 边缘不规则
+      float m2=uMark*(1.-smoothstep(.45,1.1,dn))*(.75+.25*fract(MK[i].w*7.3+.4));                         // 外圈渐淡，深浅各不同
+      float rc=(1.-smoothstep(.1,.9,dn))*MK[i].w;
+      vec3 t2=mix(vec3(.80,.64,.56),vec3(.97,.56,.58),rc)*(.93+.12*fbm(vec3(q*14.,5.+float(i))));         // 褐印偏咖啡、红印偏粉红
+      c*=mix(vec3(1.),t2,m2);
+    }
+  }
   // 屏障受损：泛红、暗哑、细碎脱屑
   c*=mix(vec3(1.),vec3(1.,.74,.72),uBar*(.6+.3*fbm(vec3(q*1.1,22.)))); r=mix(r,.68,uBar*.6);
   c=mix(c,L(vec3(.93,.86,.80)),speck*uBar*.3);
