@@ -246,6 +246,8 @@ float lesB(vec2 q){   // 闭口/痘痘把皮肤顶起来的鼓包
   float s1=smoothstep(0.,.33,uAcne), s2=smoothstep(.33,.66,uAcne), s3=smoothstep(.66,1.,uAcne);
   float R=.32+.26*s2+.1*s3, d=length(q-LC); return -uAge*.2*grooves(q)+ (.08*s1+.09*s2+.1*s3)*exp(-d*d/(R*R))+uBlack*.035*exp(-d*d/.03);
 }
+float oilFilm(vec2 q){float dm=9.; for(int i=0;i<40;i++) dm=min(dm,length(q-uFol[i]));   // 毛孔口斜坡上不打油光，免得一圈发白
+  return uOil*(.6+.4*smoothstep(.35,.65,fbm(vec3(q*.55,21.))))*smoothstep(.08,.2,dm);}   // 油膜：整片泛油但厚薄不匀
 float surfY(vec2 q){return 3.9+.1*sin(q.x*.8+.3)*cos(q.y*.9-.5)+.05*sin(q.x*1.9-q.y*1.3+1.)+lesB(q);}
 /* 表面真实下凹：皮纹沟 + 毛孔（几何位移，边缘渐隐以免和切面错位） */
 float topDisp(vec2 q,float d){
@@ -278,8 +280,8 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   vec3 v2=voro2(w*3.4+3.1); float g2=1.-smoothstep(0.,.12,v2.y); g2*=g2;
   float grain=fbm(vec3(q*26.,2.)), n2=fbm(vec3(q*.9,4.)), mot=fbm(vec3(q*2.3,8.));
   float pore=0.;
-  for(int i=0;i<40;i++){pore=max(pore,1.-smoothstep(.03*(1.+.6*uOil),.085*(1.+.7*uOil),length(q-uFol[i])));}
-  vec3 vp=voro2(q*2.2+11.); pore=max(pore,step(.62-.2*uOil,vp.z)*(1.-smoothstep(.0,.028*(1.+1.2*uOil+.6*uBlack),vp.x))*.75);
+  for(int i=0;i<40;i++){pore=max(pore,1.-smoothstep(.03*(1.+1.3*uOil),.085*(1.+1.4*uOil),length(q-uFol[i])));}
+  vec3 vp=voro2(q*2.2+11.); pore=max(pore,step(.62-.32*uOil,vp.z)*(1.-smoothstep(.0,.028*(1.+2.*uOil+.6*uBlack),vp.x))*.75);
   H=-g1*(.011+.031*d)-g2*(.003+.01*d)-pore*(.015+.012*d)+(grain-.5)*(.0025+.002*d);
   vec3 base=mix(L(vec3(.88,.70,.58)),L(vec3(.84,.64,.53)),smoothstep(.3,.7,n2));
   base=mix(base,L(vec3(.86,.60,.52)),smoothstep(.55,.75,mot)*(.15+.25*d));
@@ -288,7 +290,7 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   float tl=dot(tc,vec3(.3,.55,.15))/max(dot(tavg,vec3(.3,.55,.15)),.01);
   base*=mix(1.,tl,.45+.35*d);   // 只借照片的明暗细节，底色保持米桃色
   base=mix(base,base*vec3(.82,.74,.72),(g1*.5+g2*.2)*(.45+.55*d));
-  base=mix(base,L(vec3(.50,.36,.30)),pore*.55);
+  base=mix(base,L(vec3(.50,.36,.30))*(1.-.25*uOil),pore*(.55+.25*uOil));
   float edge=smoothstep(.06,.16,v1.y)*(1.-smoothstep(.16,.3,v1.y));
   float speck=smoothstep(.62,.72,fbm(vec3(q*9.,3.)));
   vec3 dc=mix(base,base*vec3(.92,.9,.9)+L(vec3(.05,.045,.04)),.6);
@@ -297,7 +299,13 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   c=mix(base,dc,d);
   r=mix(.3+g1*.1,.82,d); s=1.;
   // 油性：泛油光
-  c=mix(c,c*vec3(1.03,1.,.94),uOil*.4); r=mix(r,.13,uOil*.9);
+  float film=oilFilm(q);
+  c=mix(c,c*vec3(1.04,.99,.9),film*.5); r=mix(r,.08,film);
+  // 毛孔口冒出的油珠：微黄、亮、略鼓
+  float bead=0.;
+  for(int i=0;i<40;i++){bead=max(bead,1.-smoothstep(.02,.055,length(q-uFol[i]-vec2(.012,.008))));}
+  bead=max(bead,step(.5,vp.z)*(1.-smoothstep(.0,.02,vp.x))*.8);
+  c=mix(c,L(vec3(.96,.86,.6)),bead*uOil*.55); H+=bead*uOil*.006; r=mix(r,.03,bead*uOil);
   // 黑头：毛孔口发黑
   float bh=0.;
   if(uBlack>.001) for(int i=0;i<40;i++){bh=max(bh,1.-smoothstep(.045,.075,length(q-uFol[i])+(fbm(vec3(q*30.,1.))-.5)*.02));}
@@ -497,7 +505,7 @@ vec3 skinBump(vec3 sp,vec3 n,float H,float fd){
   return normalize(abs(det)*n-g);
 }
 `;
-const skinMat = new THREE.MeshPhysicalMaterial({roughness:.5, sheen:.25, sheenRoughness:.6, sheenColor:new THREE.Color('#f5dccd'), specularIntensity:.55});
+const skinMat = new THREE.MeshPhysicalMaterial({roughness:.5, sheen:.25, sheenRoughness:.6, sheenColor:new THREE.Color('#f5dccd'), specularIntensity:.55, clearcoat:1, clearcoatRoughness:.06});   // 清漆层只给油膜用，没油时乘成 0
 skinMat.onBeforeCompile = sh => {
   sh.uniforms.uDry = U.dry; sh.uniforms.uOil = U.oil; sh.uniforms.uBlack = U.black; sh.uniforms.uAcne = U.acne; sh.uniforms.uMark = U.mark; sh.uniforms.uBar = U.bar; sh.uniforms.uRed = U.red; sh.uniforms.uSpot = U.spot; sh.uniforms.uSun = U.sun; sh.uniforms.uAge = U.age; sh.uniforms.uFol = U.fol; sh.uniforms.uCol = U.col; sh.uniforms.uNrm = U.nrm;
   sh.vertexShader = sh.vertexShader
@@ -508,7 +516,8 @@ skinMat.onBeforeCompile = sh => {
     .replace('#include <color_fragment>', '#include <color_fragment>\nvec3 sCol; float sH, sR, sS; skinSample(vWPos, normalize(vWN), sCol, sH, sR, sS); diffuseColor.rgb = sCol;')
     .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = sR;')
     .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = skinBump(-vViewPosition, normal, sH, faceDirection);\nif(vWN.y>.5){ vec3 tn=texture(uNrm,vWPos.xz/TEXS).xyz*2.-1.; normal=normalize(normal+(viewMatrix*vec4(tn.x,0.,-tn.y,0.)).xyz*(.6+.7*uDry)); }')
-    .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += sCol*vec3(.04,.02,.014)*sS;');
+    .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += sCol*vec3(.04,.02,.014)*sS;\nif(vWN.y>.5 && uOil>.001){ vec3 hv=normalize((viewMatrix*vec4(.12,1.,.08,0.)).xyz); float nh=max(dot(normal,hv),0.); float fo=oilFilm(vWPos.xz); totalEmissiveRadiance += vec3(1.,.96,.88)*fo*(pow(nh,70.)*.9+pow(nh,10.)*.07); }')   // 油光：跟着视角走的湿亮高光
+    .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\nmaterial.clearcoat *= vWN.y>.5 ? oilFilm(vWPos.xz) : 0.;');
 };
 const blockGeo = new THREE.BoxGeometry(2*W, TOP-BOT, 2*D, 320, 1, 256);
 blockGeo.translate(0, (TOP+BOT)/2, 0);
@@ -844,7 +853,7 @@ function fitCam(c) {
   const tg = V(...c.tgt), pos = V(...c.pos);
   return {pos: tg.clone().add(pos.sub(tg).multiplyScalar(k)), tgt: tg};
 }
-function select(s, instant) {
+function select(s, instant, fly) {   // 切肤况不动视角，只有首次打开和「复位」才飞到预设机位
   active = s; Object.assign(goal, P0, s.p);
   acneTimers.forEach(clearTimeout); acneTimers = [];
   document.getElementById('stages').style.display = s.id === 'acne' ? '' : 'none';
@@ -860,12 +869,13 @@ function select(s, instant) {
     document.getElementById('cCare').textContent = s.care;
     card.classList.remove('fade');
   }, instant ? 0 : 280);
+  if (!instant && !fly) return;
   const c = fitCam(s.cam);
   if (instant) { camera.position.copy(c.pos); controls.target.copy(c.tgt); camTween = null; }
   else camTween = {t:0, p0:camera.position.clone(), t0:controls.target.clone(), p1:c.pos, t1:c.tgt};
 }
 controls.addEventListener('start', () => { camTween = null; controls.autoRotate = false; });
-document.getElementById('bReset').onclick = () => select(active);
+document.getElementById('bReset').onclick = () => select(active, false, true);
 const bLabel = document.getElementById('bLabel');
 const setLabel = on => { bLabel.classList.toggle('on', on); document.body.classList.toggle('nolabel', !on); localStorage.setItem('hymnSkin.label', on ? '1' : '0'); };
 bLabel.onclick = () => setLabel(!bLabel.classList.contains('on'));
