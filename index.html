@@ -5,55 +5,54 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>赫眉 · 皮肤 3D 课堂</title>
 <style>
-:root{--pink:#eaa8b1;--ink:#f4ece8;--mute:#a8948f}
+:root{--pink:#eaa8b1;--deep:#c46f7d;--ink:#3b2a2b;--mute:#9a8584}
 *{box-sizing:border-box;margin:0}
-html,body{height:100%;overflow:hidden;color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
-body{background:radial-gradient(120% 90% at 58% 42%,#2b181a 0%,#160d0e 55%,#0b0707 100%)}
+html,body{height:100%;overflow:hidden;color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;background:#f3e6e3}
 canvas{position:fixed;inset:0;display:block;touch-action:none}
 .serif{font-family:"Songti SC","STSong","Noto Serif SC",serif}
 
-header{position:fixed;left:32px;top:26px;pointer-events:none}
-header .brand{letter-spacing:.34em;font-size:11px;color:var(--pink)}
+header{position:fixed;left:32px;top:26px;pointer-events:none;z-index:2}
+header .brand{letter-spacing:.34em;font-size:11px;color:var(--deep)}
 header h1{font-size:30px;font-weight:600;margin-top:4px;letter-spacing:.06em}
 
 nav{z-index:2;position:fixed;left:32px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:2px}
 nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:6px 12px 6px 0;font-size:15px;color:var(--mute);transition:color .3s}
 nav button i{width:16px;height:1px;background:currentColor;opacity:.5;transition:width .35s,background .35s}
 nav button:hover{color:var(--ink)}
-nav button.on{color:var(--ink)}
-nav button.on i{width:34px;background:var(--pink);opacity:1}
-nav button[disabled]{cursor:default;opacity:.32}
+nav button.on{color:var(--ink);font-weight:600}
+nav button.on i{width:34px;height:2px;background:var(--pink);opacity:1}
+nav button[disabled]{cursor:default;opacity:.4}
 nav button small{font-size:10px;letter-spacing:.1em}
 
-.card{z-index:2;position:fixed;right:32px;bottom:32px;width:min(360px,calc(100vw - 64px));padding:22px 24px;background:rgba(32,19,20,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(234,168,177,.16);border-radius:16px;transition:opacity .35s}
+.card{z-index:2;position:fixed;right:32px;bottom:32px;width:min(360px,calc(100vw - 64px));padding:22px 24px;background:rgba(255,255,255,.55);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);border:1px solid rgba(255,255,255,.8);box-shadow:0 20px 50px -20px rgba(150,80,90,.35);border-radius:18px;transition:opacity .35s}
 .card.fade{opacity:0}
 .card h2{font-size:26px;font-weight:600;letter-spacing:.04em}
 .row{display:grid;grid-template-columns:50px 1fr;gap:8px;margin-top:12px}
-.row span{color:var(--pink);font-size:12px;letter-spacing:.08em;padding-top:2px}
+.row span{color:var(--deep);font-size:12px;letter-spacing:.08em;padding-top:2px}
 .row p{font-size:15px;line-height:1.55}
-.meter{margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--mute);display:flex;gap:22px;align-items:flex-end}
-.meter b{display:block;font-size:22px;line-height:1.2;color:#9fd0ff;font-variant-numeric:tabular-nums;font-weight:600}
-.meter .out b{color:#ffb4a8}
+.meter{margin-top:16px;padding-top:12px;border-top:1px solid rgba(160,110,115,.15);font-size:12px;color:var(--mute);display:flex;gap:22px;align-items:flex-end}
+.meter b{display:block;font-size:22px;line-height:1.2;color:#3d8fd6;font-variant-numeric:tabular-nums;font-weight:600}
+.meter .out b{color:#d36a6a}
 .meter em{font-style:normal;margin-left:auto;display:flex;align-items:center;gap:6px}
-.meter em::before{content:'';width:7px;height:7px;border-radius:50%;background:#8cc8ff;box-shadow:0 0 6px #8cc8ff}
+.meter em::before{content:'';width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#9fd2ff 60%,#5aa8e8);box-shadow:0 0 0 1px rgba(90,168,232,.3)}
 
 .tools{z-index:2;position:fixed;right:32px;top:26px;display:flex;gap:8px}
-.tools button{all:unset;cursor:pointer;font-size:13px;padding:6px 14px;border-radius:99px;border:1px solid rgba(234,168,177,.25);color:var(--mute);transition:all .3s}
+.tools button{all:unset;cursor:pointer;font-size:13px;padding:6px 14px;border-radius:99px;background:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.8);color:var(--mute);transition:all .3s}
 .tools button.on,.tools button:hover{color:var(--ink);border-color:var(--pink)}
 
-.foot{position:fixed;left:32px;bottom:22px;font-size:12px;color:#7a6663;pointer-events:none}
+.foot{position:fixed;left:32px;bottom:22px;font-size:12px;color:#a8908e;pointer-events:none}
 
 .lbl{z-index:1;position:fixed;left:0;top:0;pointer-events:none;font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:opacity .3s;will-change:transform}
-.lbl::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--pink);box-shadow:0 0 8px var(--pink);flex:none}
-.lbl span{background:rgba(18,11,12,.62);padding:1px 8px;border-radius:6px}
+.lbl::before{content:'';width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--pink);flex:none}
+.lbl span{background:rgba(255,255,255,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:1px 9px;border-radius:99px;color:var(--ink)}
 body.nolabel .lbl{opacity:0!important}
 
 @media (max-width:820px){
   header{left:18px;top:16px} header h1{font-size:21px}
-  nav{top:auto;bottom:0;left:0;right:0;transform:none;flex-direction:row;overflow-x:auto;gap:6px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(15,9,10,.75)}
+  nav{top:auto;bottom:0;left:0;right:0;transform:none;flex-direction:row;overflow-x:auto;gap:6px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
   nav button{white-space:nowrap;padding:5px 12px;border-radius:99px;font-size:14px}
   nav button i{display:none}
-  nav button.on{background:rgba(234,168,177,.2)}
+  nav button.on{background:rgba(234,168,177,.35)}
   .card{left:14px;right:14px;width:auto;bottom:66px;padding:14px 16px}
   .card h2{font-size:20px} .row{margin-top:6px} .row p{font-size:14px}
   .meter{margin-top:10px;padding-top:8px}
@@ -85,19 +84,19 @@ body.nolabel .lbl{opacity:0!important}
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
-import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+import {mergeGeometries, mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
 
 /* ---------- 状态定义 ---------- */
 const STATES = [
   {id:'healthy', name:'健康肌', ready:true,
    p:{dry:0, water:.94, lipid:1},
-   cam:{pos:[14.5,9.5,18], tgt:[0,.3,0]},
+   cam:{pos:[14,9.5,17.5], tgt:[0,.3,0]},
    see:'有光泽，摸着软，不紧绷',
    under:'角质细胞像砖，细胞间脂质像水泥，砌得严严实实，把水锁在里面',
    care:'温和清洁、日常保湿、白天防晒，守住就好'},
   {id:'dry', name:'干燥缺水', ready:true,
-   p:{dry:1, water:.38, lipid:.22},
-   cam:{pos:[8,8.2,12.5], tgt:[.2,2.7,1.2]},
+   p:{dry:1, water:.38, lipid:.15},
+   cam:{pos:[11.5,9.6,15.5], tgt:[1.4,2.1,1]},
    see:'紧绷、起皮、上妆卡粉，细纹更明显',
    under:'“水泥”变少，砖翘起来、缝变大，水顺着缝往外跑',
    care:'补水的同时补“水泥”（如神经酰胺）；洗脸水别太烫，别过度清洁'},
@@ -117,20 +116,34 @@ let seed = 7;
 const rand = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const R = (a,b) => a + (b-a)*rand();
 const V = (x,y,z) => new THREE.Vector3(x,y,z);
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
 
-const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, powerPreference:'high-performance'});
+const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(innerWidth, innerHeight);
-renderer.setClearColor(0x000000, 0);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = .82;
-renderer.localClippingEnabled = true;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
 document.body.prepend(renderer.domElement);
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
-scene.environmentIntensity = .3;
+scene.environment = pmrem.fromScene(new RoomEnvironment(), .03).texture;
+scene.environmentIntensity = 1.0;
+
+/* 背景：柔粉白 + 虚化光斑（画在纹理里，透明材质才能折射到它） */
+{
+  const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 1024;
+  const g = cv.getContext('2d');
+  const lg = g.createLinearGradient(0,0,0,1024); lg.addColorStop(0,'#fbf3f1'); lg.addColorStop(.6,'#f5e5e2'); lg.addColorStop(1,'#ecd5d1');
+  g.fillStyle = lg; g.fillRect(0,0,1024,1024);
+  const glow = (x,y,r,c) => { const rg = g.createRadialGradient(x,y,0,x,y,r); rg.addColorStop(0,c); rg.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle = rg; g.fillRect(x-r,y-r,2*r,2*r); };
+  glow(600,420,520,'rgba(255,255,255,.9)');
+  glow(880,160,260,'rgba(240,190,196,.45)');
+  glow(120,860,320,'rgba(236,180,186,.4)');
+  for (let i=0; i<26; i++) glow(R(0,1024), R(0,1024), R(14,60), `rgba(255,255,255,${R(.25,.6).toFixed(2)})`);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  scene.background = tex;
+}
 
 const camera = new THREE.PerspectiveCamera(35, innerWidth/innerHeight, .1, 200);
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -138,91 +151,124 @@ controls.enableDamping = true; controls.dampingFactor = .08;
 controls.minDistance = 4; controls.maxDistance = 40;
 controls.autoRotate = true; controls.autoRotateSpeed = .35;
 
-scene.add(new THREE.HemisphereLight(0xffe8e0, 0x2a1414, .8));
-const key = new THREE.DirectionalLight(0xfff1ea, 2.2); key.position.set(6,12,8); scene.add(key);
-const rim = new THREE.DirectionalLight(0xeaa8b1, 1.8); rim.position.set(-8,4,-10); scene.add(rim);
-const low = new THREE.DirectionalLight(0xffc9b0, .5); low.position.set(4,-6,6); scene.add(low);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xf0d0cc, .9));
+const key = new THREE.DirectionalLight(0xffffff, 2.0); key.position.set(5,12,9); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffe0e4, 1.6); rim.position.set(-9,5,-8); scene.add(rim);
 
-/* 皮肤块边界：x ±5，z ±4；四个侧面做“切开”效果 */
+/* ---------- 形状：整体轻微起伏 + 表皮突 ---------- */
 const W = 5, D = 4;
-const clip = [new THREE.Plane(V(-1,0,0),W), new THREE.Plane(V(1,0,0),W), new THREE.Plane(V(0,0,-1),D), new THREE.Plane(V(0,0,1),D)];
-const mat = o => new THREE.MeshStandardMaterial({roughness:.55, metalness:0, clippingPlanes:clip, side:THREE.DoubleSide, ...o});
-
-/* 表皮—真皮交界（波浪状的“表皮突”） */
-const ej = (x,z) => 2.55 + .22*Math.sin(x*1.7+.4)*Math.cos(z*1.5-.3);
+const wave = (x,z) => .16*Math.sin(x*.6+.5)*Math.cos(z*.7-.2);
+const ridge = (x,z) => .18*Math.sin(x*1.7+.4)*Math.cos(z*1.5-.3);
+const ej = (x,z) => 2.55 + wave(x,z) + ridge(x,z);
 const FOL = [{x:2.2, z:1.0, bot:-.9}, {x:-2.7, z:-1.9, bot:-.5}];
 const nearF = (x,z,r) => FOL.some(f => Math.hypot(x-f.x, z-f.z) < r);
 const dummy = new THREE.Object3D();
 const col = new THREE.Color();
 
-/* ---------- 角质层：砖 ---------- */
+/* 圆角软垫：上下两面按函数起伏 */
+function slab(bottom, top, h, r = .3, inset = 0) {
+  const w = W - inset, d = D - inset;
+  let g = new THREE.BoxGeometry(2*w, h, 2*d, 110, 14, 88);
+  g.deleteAttribute('normal'); g.deleteAttribute('uv');
+  g = mergeVertices(g);
+  const p = g.attributes.position, v = V(), q = V();
+  const rr = Math.min(r, h*.45);
+  for (let i=0; i<p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    q.set(clamp(v.x, -w+rr, w-rr), clamp(v.y, -h/2+rr, h/2-rr), clamp(v.z, -d+rr, d-rr));
+    const dv = v.clone().sub(q);
+    if (dv.lengthSq() > 1e-10) v.copy(q).addScaledVector(dv.normalize(), rr);
+    const t = (v.y + h/2)/h, b = bottom(v.x,v.z), tp = top(v.x,v.z);
+    p.setXYZ(i, v.x, b + t*(tp-b), v.z);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
+/* ---------- 材质 ---------- */
+const jelly = (o) => new THREE.MeshPhysicalMaterial({roughness:.12, metalness:0, transmission:1, thickness:1, ior:1.4, clearcoat:1, clearcoatRoughness:.08, specularIntensity:1, ...o});
+const gloss = (o) => new THREE.MeshPhysicalMaterial({roughness:.3, metalness:0, clearcoat:.8, clearcoatRoughness:.15, sheen:.6, sheenColor:new THREE.Color('#fff0f0'), ...o});
+
+/* ---------- 角质层：一片片“砖” ---------- */
 const bricks = [];
 for (let row=0; row<4; row++) {
-  const y = 3.64 + row*.1;
-  for (let x=-5.5; x<=5.5; x+=.76) for (let zi=0, z=-4.5; z<=4.5; z+=.66, zi++) {
-    const xx = x + (zi%2 ? .38 : 0) + (row%2 ? .25 : 0) + R(-.05,.05);
-    const zz = z + (row%2 ? .3 : 0) + R(-.05,.05);
-    if (nearF(xx,zz,.42)) continue;
-    bricks.push({x:xx, y:y+R(-.012,.012), z:zz, row, ry:R(0,Math.PI), ta:R(0,Math.PI*2), r1:rand(), r2:rand(), r3:rand(), base:new THREE.Color().setHSL(.055+R(-.01,.01), .5, row===3 ? .66 : .6+R(-.03,.03))});
+  for (let x=-W+.45; x<=W-.45; x+=.74) for (let zi=0, z=-D+.45; z<=D-.45; z+=.64, zi++) {
+    const xx = clamp(x + (zi%2 ? .37 : 0) + (row%2 ? .22 : 0) + R(-.05,.05), -W+.42, W-.42);
+    const zz = clamp(z + (row%2 ? .28 : 0) + R(-.05,.05), -D+.42, D-.42);
+    if (nearF(xx,zz,.45)) continue;
+    bricks.push({x:xx, y:3.67 + row*.09 + wave(xx,zz) + R(-.01,.01), z:zz, row, ry:R(0,Math.PI), ta:R(0,Math.PI*2), r1:rand(), r2:rand(), r3:rand(),
+      base:new THREE.Color().setHSL(.02+R(-.01,.01), .62, row===3 ? .86 : .82+R(-.02,.02))});
   }
 }
-const brickMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(.43,.43,.075,6,1), mat({roughness:.42}), bricks.length);
+const brickMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 28, 10), gloss({roughness:.28}), bricks.length);
 brickMesh.frustumCulled = false; scene.add(brickMesh);
-const dullCol = new THREE.Color('#c9bfb8');
+const dullCol = new THREE.Color('#d9cbc6');
 function updBricks(p) {
   bricks.forEach((b,i) => {
     const top = b.row === 3, d = p.dry;
-    const s = 1 - .24*d*(.6 + .4*b.r1);
-    const curl = d*(top ? .24 : b.row===2 ? .1 : .03)*b.r2;
-    let rx = Math.cos(b.ta)*curl, rz = Math.sin(b.ta)*curl, y = b.y + (top ? d*.03*b.r2 : 0);
+    const s = 1 - .26*d*(.6 + .4*b.r1);
+    const curl = d*(top ? .26 : b.row===2 ? .1 : .03)*b.r2;
+    let rx = Math.cos(b.ta)*curl, rz = Math.sin(b.ta)*curl, y = b.y + (top ? d*.04*b.r2 : 0);
     if (top && b.r3 < .08) { y += d*(.08 + .22*b.r1); rx += Math.cos(b.ta)*d*.4; rz += Math.sin(b.ta)*d*.4; }
-    dummy.position.set(b.x, y, b.z); dummy.rotation.set(rx, b.ry, rz); dummy.scale.set(s, 1 - .15*d, s);
+    dummy.position.set(b.x, y, b.z); dummy.rotation.set(rx, b.ry, rz);
+    dummy.scale.set(.47*s, .055*(1 - .2*d), .42*s);
     dummy.updateMatrix(); brickMesh.setMatrixAt(i, dummy.matrix);
-    col.copy(b.base).lerp(dullCol, d*(top ? .55 : .3)); brickMesh.setColorAt(i, col);
+    col.copy(b.base).lerp(dullCol, d*(top ? .6 : .3)); brickMesh.setColorAt(i, col);
   });
   brickMesh.instanceMatrix.needsUpdate = true; brickMesh.instanceColor.needsUpdate = true;
 }
-/* 砖缝里的“水泥”：细胞间脂质 */
-const lipidMat = new THREE.MeshBasicMaterial({color:'#ffcf7a', transparent:true, opacity:.5, depthWrite:false});
-const lipid = new THREE.Mesh(new THREE.BoxGeometry(2*W, .3, 2*D), lipidMat);
-lipid.position.y = 3.75; scene.add(lipid);
+/* 砖缝里的“水泥”：细胞间脂质，像一层奶霜 */
+const lipidMat = gloss({color:'#fff3e4', roughness:.18, clearcoat:1, transparent:true, opacity:1, sheen:0});
+const lipid = new THREE.Mesh(slab((x,z) => 3.6 + wave(x,z), (x,z) => 3.9 + wave(x,z), .3, .12, .15), lipidMat);
+scene.add(lipid);
 
-/* ---------- 活表皮：细胞 ---------- */
+/* ---------- 活表皮：果冻细胞 ---------- */
 const cells = [];
-for (let x=-5.2; x<=5.2; x+=.3) for (let z=-4.2; z<=4.2; z+=.3) {
-  const xx = x + R(-.05,.05), zz = z + R(-.05,.05);
-  if (nearF(xx,zz,.36)) continue;
-  const base = ej(xx,zz); let layer = 0;
-  for (let y=base+.14; y<3.52; y+=.27, layer++) {
-    const gran = y > 3.25, basal = layer === 0;
-    const melano = basal && rand() < .03;
-    cells.push({x:xx+R(-.03,.03), y, z:zz+R(-.03,.03), sx: gran ? 1.25 : 1, sy: basal ? 1.3 : gran ? .6 : .95, ry:R(0,6),
-      c: melano ? new THREE.Color('#5a3122') : basal ? new THREE.Color().setHSL(.01,.45,.5) : gran ? new THREE.Color().setHSL(.05,.5,.64) : new THREE.Color().setHSL(.005,.5,.6+R(-.03,.03))});
+for (let x=-W+.32; x<=W-.32; x+=.5) for (let z=-D+.32; z<=D-.32; z+=.5) {
+  const xx = x + R(-.06,.06), zz = z + R(-.06,.06);
+  if (nearF(xx,zz,.48)) continue;
+  const base = ej(xx,zz), topY = 3.42 + wave(xx,zz); let layer = 0;
+  for (let y=base+.2; y<topY; y+=.4, layer++) {
+    const basal = layer === 0, gran = y > topY - .3;
+    const melano = basal && rand() < .035;
+    cells.push({x:xx, y, z:zz, sx: gran ? 1.25 : 1, sy: basal ? 1.15 : gran ? .62 : .92, ry:R(0,6), melano,
+      c: basal ? new THREE.Color().setHSL(.985,.65,.72) : gran ? new THREE.Color().setHSL(.03,.7,.86) : new THREE.Color().setHSL(.995,.7,.8+R(-.03,.03))});
   }
 }
-const cellMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.165,1), mat({roughness:.5}), cells.length);
+const cellGeo = new THREE.SphereGeometry(.26, 22, 16);
+const cellList = cells.filter(c => !c.melano), melList = cells.filter(c => c.melano);
+const cellMesh = new THREE.InstancedMesh(cellGeo, jelly({thickness:.5, attenuationColor:new THREE.Color('#f39aa2'), attenuationDistance:.8, roughness:.08}), cellList.length);
 cellMesh.frustumCulled = false; scene.add(cellMesh);
-cells.forEach((c,i) => cellMesh.setColorAt(i, c.c));
+cellList.forEach((c,i) => cellMesh.setColorAt(i, c.c));
+const melMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(.17, 18, 12), gloss({color:'#8a4f36', roughness:.25}), melList.length);
+melList.forEach((c,i) => { dummy.position.set(c.x,c.y,c.z); dummy.rotation.set(0,0,0); dummy.scale.set(1,1.1,1); dummy.updateMatrix(); melMesh.setMatrixAt(i, dummy.matrix); });
+scene.add(melMesh);
 function updCells(p) {
-  const k = 1 - .1*p.dry;
-  cells.forEach((c,i) => {
+  const k = 1 - .14*p.dry;
+  cellList.forEach((c,i) => {
     dummy.position.set(c.x, c.y, c.z); dummy.rotation.set(0, c.ry, 0); dummy.scale.set(c.sx*k, c.sy*k, c.sx*k);
     dummy.updateMatrix(); cellMesh.setMatrixAt(i, dummy.matrix);
+    col.copy(c.c).lerp(dullCol, .45*p.dry); cellMesh.setColorAt(i, col);
   });
-  cellMesh.instanceMatrix.needsUpdate = true;
+  cellMesh.instanceMatrix.needsUpdate = true; cellMesh.instanceColor.needsUpdate = true;
 }
 
-/* ---------- 真皮：胶原、弹力纤维、毛细血管 ---------- */
+/* ---------- 真皮：粉色果冻层，里面是胶原、弹力纤维、血管 ---------- */
+const DB = (x,z) => -1.45 + wave(x,z)*.6;
+scene.add(new THREE.Mesh(slab(DB, (x,z) => ej(x,z) - .02, 4, .35),
+  jelly({color:'#ffd9d6', thickness:2.5, attenuationColor:new THREE.Color('#f4a2a4'), attenuationDistance:4.5, roughness:.18, ior:1.38})));
+
 function fiber(n, yMin, yMax, r0, r1, amp, len) {
   const geos = [];
   for (let i=0; i<n; i++) {
-    const a = R(0,Math.PI*2), dir = V(Math.cos(a), R(-.12,.12), Math.sin(a));
-    const perp = V(-dir.z, 0, dir.x), st = V(R(-W-1,W+1), R(yMin,yMax), R(-D-1,D+1));
+    const a = R(0,Math.PI*2), dir = V(Math.cos(a), R(-.1,.1), Math.sin(a));
+    const perp = V(-dir.z, 0, dir.x), st = V(R(-W,W), R(yMin,yMax), R(-D,D));
     const pts = [], L = R(len*.6, len), ph = R(0,6);
     for (let k=0; k<=8; k++) {
       const p = st.clone().addScaledVector(dir, L*k/8).addScaledVector(perp, Math.sin(k*1.3+ph)*amp);
-      p.y += Math.cos(k*1.7+ph)*amp*.6;
-      p.y = Math.min(Math.max(p.y, yMin), Math.min(yMax, ej(p.x,p.z) - .12));
+      p.x = clamp(p.x, -W+.35, W-.35); p.z = clamp(p.z, -D+.35, D-.35);
+      p.y += Math.cos(k*1.7+ph)*amp*.6 + wave(p.x,p.z);
+      p.y = clamp(p.y, DB(p.x,p.z) + .3, ej(p.x,p.z) - .15);
       for (const f of FOL) { const dx=p.x-f.x, dz=p.z-f.z, d=Math.hypot(dx,dz); if (d<.5) { p.x = f.x+dx/d*.5; p.z = f.z+dz/d*.5; } }
       pts.push(p);
     }
@@ -230,118 +276,104 @@ function fiber(n, yMin, yMax, r0, r1, amp, len) {
   }
   return mergeGeometries(geos);
 }
-scene.add(new THREE.Mesh(fiber(320, -1.3, 1.6, .035, .06, .22, 4.5), mat({color:'#e6c4b8', roughness:.6})));
-scene.add(new THREE.Mesh(fiber(160, 1.6, 2.8, .018, .028, .14, 2.6), mat({color:'#eccabd', roughness:.6})));
-scene.add(new THREE.Mesh(fiber(90, -1.3, 2.6, .012, .018, .35, 3.5), mat({color:'#e8c26a', emissive:'#3a2a00', roughness:.4})));
+scene.add(new THREE.Mesh(fiber(170, -1.1, 1.6, .04, .065, .22, 4), gloss({color:'#fbe6df', roughness:.25})));
+scene.add(new THREE.Mesh(fiber(90, 1.6, 2.6, .02, .03, .14, 2.4), gloss({color:'#fde9e3', roughness:.25})));
+scene.add(new THREE.Mesh(fiber(55, -1.1, 2.4, .014, .02, .35, 3.2), gloss({color:'#f0c46a', roughness:.2, emissive:'#5a3a00', emissiveIntensity:.25})));
 
 const vessels = [];
-for (let x=-4.6; x<=4.6; x+=.9) for (let z=-3.6; z<=3.6; z+=.9) {
-  const xx = x + R(-.2,.2), zz = z + R(-.2,.2), top = ej(xx,zz);
-  if (top < 2.58 || nearF(xx,zz,.6)) continue;
+for (let x=-4.4; x<=4.4; x+=.9) for (let z=-3.4; z<=3.4; z+=.9) {
+  const xx = x + R(-.2,.2), zz = z + R(-.2,.2), top = ej(xx,zz), lo = 1.3 + wave(xx,zz);
+  if (top - wave(xx,zz) < 2.6 || nearF(xx,zz,.6)) continue;
   const w = .07;
-  vessels.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(xx-w,1.3,zz), V(xx-w*.8,top-.25,zz), V(xx,top-.1,zz), V(xx+w*.8,top-.25,zz), V(xx+w,1.3,zz)]), 20, .035, 6));
+  vessels.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(xx-w,lo,zz), V(xx-w*.8,top-.28,zz), V(xx,top-.14,zz), V(xx+w*.8,top-.28,zz), V(xx+w,lo,zz)]), 20, .035, 6));
 }
-for (const yy of [1.3, -1.15]) for (let i=0; i<6; i++) {
-  const z0 = R(-D,D), pts = [];
-  for (let k=0; k<=8; k++) pts.push(V(-W-1 + k*(2*W+2)/8, yy + R(-.2,.2), z0 + Math.sin(k*1.4+i)*.5));
-  vessels.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, yy > 0 ? .04 : .065, 6));
+for (const yy of [1.3, -.9]) for (let i=0; i<6; i++) {
+  const z0 = R(-D+.8,D-.8), pts = [];
+  for (let k=0; k<=8; k++) { const x = -W+.4 + k*(2*W-.8)/8; pts.push(V(x, yy + wave(x,z0) + R(-.2,.2), z0 + Math.sin(k*1.4+i)*.5)); }
+  vessels.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, yy > 0 ? .045 : .07, 8));
 }
-scene.add(new THREE.Mesh(mergeGeometries(vessels), mat({color:'#b3242d', emissive:'#3a0306', roughness:.35})));
+scene.add(new THREE.Mesh(mergeGeometries(vessels), gloss({color:'#e0414f', roughness:.18, clearcoat:1, sheen:0})));
 
-/* ---------- 皮下脂肪 ---------- */
+/* ---------- 皮下脂肪：琥珀色果冻泡 ---------- */
 const fats = [];
-for (let x=-5.2; x<=5.2; x+=.9) for (let z=-4.2; z<=4.2; z+=.9) for (let y=-3.8; y<=-1.8; y+=.85)
-  fats.push({x:x+R(-.12,.12), y:y+R(-.1,.1), z:z+R(-.12,.12), r:R(.4,.5)});
-const fatMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1,18,12), mat({roughness:.3, emissive:'#2a1600'}), fats.length);
-fats.forEach((f,i) => { dummy.position.set(f.x,f.y,f.z); dummy.rotation.set(0,0,0); dummy.scale.set(f.r, f.r*.9, f.r); dummy.updateMatrix(); fatMesh.setMatrixAt(i, dummy.matrix); fatMesh.setColorAt(i, col.setHSL(.11+R(-.01,.01), .7, .55+R(-.04,.04))); });
+for (let x=-W+.5; x<=W-.5; x+=.92) for (let z=-D+.5; z<=D-.5; z+=.92) for (let y=-3.7; y<=-1.95; y+=.82)
+  fats.push({x:x+R(-.1,.1), y:y+R(-.08,.08)+wave(x,z), z:z+R(-.1,.1), r:R(.42,.5)});
+const fatMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1,26,18), jelly({color:'#fff1d8', thickness:.9, attenuationColor:new THREE.Color('#f6cf94'), attenuationDistance:2.2, roughness:.1}), fats.length);
+fats.forEach((f,i) => { dummy.position.set(f.x,f.y,f.z); dummy.rotation.set(0,0,0); dummy.scale.set(f.r, f.r*.9, f.r); dummy.updateMatrix(); fatMesh.setMatrixAt(i, dummy.matrix); });
 scene.add(fatMesh);
 
-/* 真皮基质、脂肪层的半透明底色 */
-const glass = (h, y, c, o) => { const m = new THREE.Mesh(new THREE.BoxGeometry(2*W, h, 2*D), new THREE.MeshBasicMaterial({color:c, transparent:true, opacity:o, depthWrite:false})); m.position.y = y; scene.add(m); };
-glass(3.95, .575, '#f0b9ae', .1);
-glass(2.6, -2.75, '#f2d48a', .06);
-scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2*W, 8.1, 2*D)).translate(0, -.05, 0), new THREE.LineBasicMaterial({color:'#eaa8b1', transparent:true, opacity:.18})));
-
 /* ---------- 毛囊、皮脂腺、汗腺 ---------- */
-const folMat = mat({color:'#d99a8c', roughness:.5});
-const hairMat = mat({color:'#2b1a14', roughness:.35});
-const glandMat = mat({color:'#e8b35a', roughness:.35, emissive:'#2a1a00'});
-const glands = [];
+const folMat = gloss({color:'#eaa5a2', roughness:.25, side:THREE.DoubleSide});
+const hairMat = gloss({color:'#3a2620', roughness:.2, sheen:0});
+const glandMat = jelly({color:'#ffe3a8', thickness:.5, attenuationColor:new THREE.Color('#eab04a'), attenuationDistance:.6});
 for (const f of FOL) {
-  const prof = [[.05,f.bot-.25],[.2,f.bot-.2],[.38,f.bot],[.36,f.bot+.3],[.27,f.bot+.9],[.26,1],[.27,3],[.31,4.0]].map(([r,y]) => new THREE.Vector2(r,y));
-  const fm = new THREE.Mesh(new THREE.LatheGeometry(prof, 28), folMat); fm.position.set(f.x,0,f.z); scene.add(fm);
-  const hl = 5.3 - (f.bot-.1);
-  const hair = new THREE.Mesh(new THREE.CylinderGeometry(.065,.08,hl,10), hairMat); hair.position.set(f.x, (5.3+f.bot-.1)/2, f.z); scene.add(hair);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(.32,.05,8,28), folMat); ring.rotation.x = Math.PI/2; ring.position.set(f.x,4.0,f.z); scene.add(ring);
-  const g = new THREE.Group(); g.position.set(f.x+.5, 1.9, f.z);
-  for (let i=0; i<7; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(R(.2,.28),16,12), glandMat); s.position.set(R(-.15,.25), R(-.3,.3), R(-.25,.25)); g.add(s); }
-  scene.add(g); glands.push(g);
+  const prof = [[.05,f.bot-.25],[.2,f.bot-.2],[.38,f.bot],[.36,f.bot+.3],[.27,f.bot+.9],[.26,1],[.27,3],[.31,3.95]].map(([r,y]) => new THREE.Vector2(r,y));
+  const fm = new THREE.Mesh(new THREE.LatheGeometry(prof, 32), folMat); fm.position.set(f.x,wave(f.x,f.z),f.z); scene.add(fm);
+  const top = 5.4, hl = top - (f.bot-.1);
+  const hair = new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,hl,12), hairMat); hair.position.set(f.x, (top+f.bot-.1)/2 + wave(f.x,f.z), f.z); scene.add(hair);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.33,.06,10,32), folMat); ring.rotation.x = Math.PI/2; ring.position.set(f.x,3.95+wave(f.x,f.z),f.z); scene.add(ring);
+  const g = new THREE.Group(); g.position.set(f.x+.52, 1.9+wave(f.x,f.z), f.z);
+  for (let i=0; i<7; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(R(.2,.28),20,14), glandMat); s.position.set(R(-.12,.25), R(-.3,.3), R(-.25,.25)); g.add(s); }
+  scene.add(g);
 }
 {
-  const c = V(-.6,-1.15,2.4), pts = [];
+  const c = V(-.6,-1.0,2.4), pts = [];
   for (let k=0; k<=60; k++) { const a = k/60*Math.PI*7; pts.push(V(c.x+Math.cos(a)*.3, c.y-.2+k/60*.4, c.z+Math.sin(a)*.3)); }
-  for (let k=1; k<=14; k++) { const t = k/14, y = c.y+.2 + t*(4.0-c.y-.2); pts.push(V(c.x + (y>2.6 ? Math.cos(y*9)*.08 : Math.sin(k)*.05), y, c.z + (y>2.6 ? Math.sin(y*9)*.08 : 0))); }
-  scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 220, .06, 6), mat({color:'#e6b9a8', roughness:.45})));
+  for (let k=1; k<=14; k++) { const t = k/14, y = c.y+.2 + t*(3.95-c.y-.2); pts.push(V(c.x + (y>2.6 ? Math.cos(y*9)*.08 : Math.sin(k)*.05), y + wave(c.x,c.z)*t, c.z + (y>2.6 ? Math.sin(y*9)*.08 : 0))); }
+  scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 220, .06, 8), gloss({color:'#f3c8bd', roughness:.22})));
 }
 
-/* 底部柔光 */
+/* 底部柔影 */
 {
   const cv = document.createElement('canvas'); cv.width = cv.height = 128;
   const g = cv.getContext('2d'), gr = g.createRadialGradient(64,64,0,64,64,64);
-  gr.addColorStop(0,'rgba(234,168,177,.35)'); gr.addColorStop(1,'rgba(234,168,177,0)'); g.fillStyle = gr; g.fillRect(0,0,128,128);
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(22,18), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv), transparent:true, depthWrite:false}));
-  m.rotation.x = -Math.PI/2; m.position.y = -4.2; scene.add(m);
+  gr.addColorStop(0,'rgba(150,80,85,.32)'); gr.addColorStop(.55,'rgba(150,80,85,.12)'); gr.addColorStop(1,'rgba(150,80,85,0)'); g.fillStyle = gr; g.fillRect(0,0,128,128);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(17,14), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv), transparent:true, depthWrite:false, toneMapped:false}));
+  m.rotation.x = -Math.PI/2; m.position.y = -4.35; scene.add(m);
 }
 
-/* ---------- 水分子 ---------- */
-const NW = 750, wBase = [], wPos = new Float32Array(NW*3), wA = new Float32Array(NW), wS = new Float32Array(NW);
+/* ---------- 水分子：晶莹水珠 ---------- */
+const NW = 260, drops = [];
 for (let i=0; i<NW; i++) {
-  const x = R(-4.8,4.8), z = R(-3.8,3.8), inSC = rand() < .45;
-  const y = inSC ? R(3.62,3.92) : R(ej(x,z)+.1, 3.5);
-  wBase.push({x, y, z, r:rand(), ph:R(0,6), sp:R(.7,1.3), leak:false, t0:0, a:0});
-  wS[i] = R(.16,.24);
+  const x = R(-W+.5, W-.5), z = R(-D+.5, D-.5), inSC = rand() < .4;
+  const y = inSC ? R(3.66,3.92) + wave(x,z) : R(ej(x,z)+.15, 3.4 + wave(x,z));
+  drops.push({x, y, z, r:rand(), r2:rand(), ph:R(0,6), sp:R(.7,1.3), sz:R(.09,.15), leak:false, t0:0, a:0});
 }
-const wGeo = new THREE.BufferGeometry();
-wGeo.setAttribute('position', new THREE.BufferAttribute(wPos,3));
-wGeo.setAttribute('aA', new THREE.BufferAttribute(wA,1));
-wGeo.setAttribute('aS', new THREE.BufferAttribute(wS,1));
-const water = new THREE.Points(wGeo, new THREE.ShaderMaterial({
-  transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
-  uniforms:{uPR:{value:renderer.getPixelRatio()}},
-  vertexShader:`attribute float aA; attribute float aS; uniform float uPR; varying float vA;
-    void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); gl_PointSize = aS*uPR*900./-mv.z; gl_Position = projectionMatrix*mv; vA = aA; }`,
-  fragmentShader:`varying float vA; void main(){ float d = length(gl_PointCoord-.5); float a = smoothstep(.5,.05,d)*vA; if(a<.01) discard; gl_FragColor = vec4(.35,.7,1.,a); }`
-}));
-water.frustumCulled = false; scene.add(water);
-let nIn = 0, nOut = 0;
+const dropMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 20, 14), new THREE.MeshPhysicalMaterial({color:'#f2faff', roughness:0, transmission:1, thickness:.25, ior:1.33, clearcoat:1, clearcoatRoughness:0, attenuationColor:new THREE.Color('#9fd2ff'), attenuationDistance:.35, specularIntensity:1, envMapIntensity:1.6}), NW);
+dropMesh.frustumCulled = false; scene.add(dropMesh);
+let nIn = 0, nOut = 0, firstWater = true;
 function updWater(t, p) {
   const leakFrac = 1 - p.water, speed = .05 + .1*p.dry;
   nIn = 0; nOut = 0;
-  wBase.forEach((w,i) => {
+  drops.forEach((w,i) => {
     const leak = w.r < leakFrac;
-    if (leak && !w.leak) w.t0 = t;
+    // 错开起跑：首次载入随机相位；切换状态时最多延迟 3 秒才开始往外跑
+    if (leak && !w.leak) w.t0 = firstWater ? t - w.r2/(speed*w.sp) : t + w.r2*3;
     w.leak = leak;
     let x = w.x, y = w.y, z = w.z, target;
     if (!leak) {
-      x += Math.sin(t*1.3+w.ph)*.03; y += Math.cos(t*1.1+w.ph)*.02; target = .85;
+      x += Math.sin(t*1.3+w.ph)*.02; y += Math.cos(t*1.1+w.ph)*.015; target = 1;
     } else {
-      const cyc = ((t - w.t0)*speed*w.sp) % 1;
+      const cyc = Math.max(0, (t - w.t0)*speed*w.sp) % 1;
       if (cyc < .6) {
-        const k = cyc/.6; y = w.y + k*(5.6 - w.y); x += Math.sin(k*9+w.ph)*.08;
-        target = y < 4 ? .85 : Math.max(0, 1 - (y-4)/1.4)*.85;
+        const k = cyc/.6, surf = 4 + wave(w.x,w.z); y = w.y + k*(5.8 - w.y); x += Math.sin(k*9+w.ph)*.08;
+        target = y < surf ? 1 : Math.max(0, 1 - (y-surf)/1.6);
       } else target = 0;
     }
     w.a += (target - w.a)*.12;
-    wPos[i*3] = x; wPos[i*3+1] = y; wPos[i*3+2] = z; wA[i] = w.a;
-    if (w.a > .2) { if (!leak) nIn++; else nOut++; }
+    const s = w.sz * w.a;
+    dummy.position.set(x, y, z); dummy.rotation.set(0,0,0); dummy.scale.set(s, s, s);
+    dummy.updateMatrix(); dropMesh.setMatrixAt(i, dummy.matrix);
+    if (!leak) { if (w.a > .3) nIn++; } else if (w.a > .05) nOut++;
   });
-  wGeo.attributes.position.needsUpdate = true; wGeo.attributes.aA.needsUpdate = true;
+  firstWater = false;
+  dropMesh.instanceMatrix.needsUpdate = true;
 }
 
 /* ---------- 标注 ---------- */
 const LABELS = [
-  ['角质层', [-W,3.8,D]], ['表皮', [-W,3.0,D]], ['真皮', [-W,.6,D]], ['皮下脂肪', [-W,-2.8,D]],
-  ['毛囊', [FOL[0].x+.3,.2,FOL[0].z]], ['皮脂腺', [FOL[0].x+.6,1.9,FOL[0].z]], ['汗腺', [-.3,-1.15,2.4]], ['毛细血管', [-W,1.3,1.5]],
+  ['角质层', [-W,3.85,D]], ['表皮', [-W,3.0,D]], ['真皮', [-W,.6,D]], ['皮下脂肪', [-W,-2.8,D]],
+  ['毛囊', [FOL[0].x+.3,.2,FOL[0].z]], ['皮脂腺', [FOL[0].x+.6,1.9,FOL[0].z]], ['汗腺', [-.3,-1.0,2.4]], ['毛细血管', [-W+.4,1.35,1.5]],
 ].map(([t,p]) => { const el = document.createElement('div'); el.className = 'lbl'; el.innerHTML = `<span>${t}</span>`; document.body.appendChild(el); return {el, v:V(...p)}; });
 const tmp = new THREE.Vector3();
 function updLabels() {
@@ -349,7 +381,7 @@ function updLabels() {
     tmp.copy(L.v).project(camera);
     const vis = tmp.z < 1 && Math.abs(tmp.x) < 1.1 && Math.abs(tmp.y) < 1.1;
     L.el.style.opacity = vis ? 1 : 0;
-    L.el.style.transform = `translate(${(tmp.x*.5+.5)*innerWidth - 3}px, ${(-tmp.y*.5+.5)*innerHeight - 9}px)`;
+    L.el.style.transform = `translate(${(tmp.x*.5+.5)*innerWidth - 4}px, ${(-tmp.y*.5+.5)*innerHeight - 10}px)`;
   }
 }
 
@@ -397,8 +429,8 @@ const want = location.hash.slice(1) || localStorage.getItem('hymnSkin.state');
 const saved = STATES.find(s => s.id === want && s.ready) || STATES[0];
 Object.assign(cur, saved.p);
 select(saved, true);
-updBricks(cur); updCells(cur);
-lipidMat.opacity = .5*cur.lipid;
+const applyLipid = p => { lipidMat.opacity = .15 + .85*p.lipid; lipid.scale.y = .35 + .65*p.lipid; lipid.position.y = (1 - lipid.scale.y)*3.75; };
+updBricks(cur); updCells(cur); applyLipid(cur);
 
 /* ---------- 循环 ---------- */
 addEventListener('resize', () => {
@@ -412,7 +444,7 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
   let moved = false;
   for (const k in goal) { const d = goal[k] - cur[k]; if (Math.abs(d) > 1e-4) { cur[k] += d*Math.min(1, dt*1.8); moved = true; } }
-  if (moved) { updBricks(cur); updCells(cur); lipidMat.opacity = .5*cur.lipid; }
+  if (moved) { updBricks(cur); updCells(cur); applyLipid(cur); }
   updWater(t, cur);
   if (camTween) {
     camTween.t = Math.min(1, camTween.t + dt/1.8); const e = ease(camTween.t);
