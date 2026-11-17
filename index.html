@@ -87,10 +87,10 @@ import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 
 /* ---------- 状态定义 ---------- */
 const STATES = [
-  {id:'healthy', name:'健康肌', ready:true,
+  {id:'healthy', name:'正常皮肤', ready:true,
    p:{dry:0, leak:.06},
    cam:{pos:[12.5,8.6,15.5], tgt:[0,.3,0]},
-   see:'有光泽，摸着软，不紧绷',
+   see:'饱满细腻，肤色均匀，有自然光泽，不干不油',
    under:'角质层薄而整齐，细胞间脂质把缝填满，水被锁在里面',
    care:'温和清洁、日常保湿、白天防晒，守住就好'},
   {id:'dry', name:'干燥缺水', ready:true,
@@ -210,14 +210,14 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   float pore=0.;
   for(int i=0;i<8;i++){pore=max(pore,1.-smoothstep(.03,.085,length(q-uFol[i])));}
   vec3 vp=voro2(q*2.2+11.); pore=max(pore,step(.62,vp.z)*(1.-smoothstep(.0,.028,vp.x))*.75);
-  H=-g1*(.022+.02*d)-g2*(.007+.006*d)-pore*.025+(grain-.5)*.004;
+  H=-g1*(.011+.031*d)-g2*(.003+.01*d)-pore*(.015+.012*d)+(grain-.5)*(.0025+.002*d);
   vec3 base=mix(L(vec3(.88,.70,.58)),L(vec3(.84,.64,.53)),smoothstep(.3,.7,n2));
-  base=mix(base,L(vec3(.86,.60,.52)),smoothstep(.55,.75,mot)*.35);
-  base=mix(base,L(vec3(.74,.56,.45)),smoothstep(.6,.8,fbm(vec3(q*4.,12.)))*.18);
+  base=mix(base,L(vec3(.86,.60,.52)),smoothstep(.55,.75,mot)*(.15+.25*d));
+  base=mix(base,L(vec3(.74,.56,.45)),smoothstep(.6,.8,fbm(vec3(q*4.,12.)))*(.06+.14*d));
   vec3 tc=texture(uCol,q/TEXS).rgb, tavg=textureLod(uCol,vec2(.5),12.).rgb;
   float tl=dot(tc,vec3(.3,.55,.15))/max(dot(tavg,vec3(.3,.55,.15)),.01);
-  base*=mix(1.,tl,.8);   // 只借照片的明暗细节，底色保持米桃色
-  base=mix(base,base*vec3(.82,.74,.72),g1*.5+g2*.2);
+  base*=mix(1.,tl,.45+.35*d);   // 只借照片的明暗细节，底色保持米桃色
+  base=mix(base,base*vec3(.82,.74,.72),(g1*.5+g2*.2)*(.45+.55*d));
   base=mix(base,L(vec3(.50,.36,.30)),pore*.55);
   float edge=smoothstep(.06,.16,v1.y)*(1.-smoothstep(.16,.3,v1.y));
   float speck=smoothstep(.62,.72,fbm(vec3(q*9.,3.)));
@@ -225,7 +225,7 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   dc=mix(dc,L(vec3(.93,.87,.81)),edge*.45+speck*.35);
   H+=d*(edge*.006+speck*.004);
   c=mix(base,dc,d);
-  r=mix(.42+g1*.12,.82,d); s=1.;
+  r=mix(.3+g1*.1,.82,d); s=1.;
 }
 /* 切面：角质层 / 表皮 / 真皮 / 皮下脂肪 */
 void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
@@ -328,7 +328,7 @@ skinMat.onBeforeCompile = sh => {
     .replace('#include <common>', '#include <common>\n' + NOISE + GLSL)
     .replace('#include <color_fragment>', '#include <color_fragment>\nvec3 sCol; float sH, sR, sS; skinSample(vWPos, normalize(vWN), sCol, sH, sR, sS); diffuseColor.rgb = sCol;')
     .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = sR;')
-    .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = skinBump(-vViewPosition, normal, sH, faceDirection);\nif(vWN.y>.5){ vec3 tn=texture(uNrm,vWPos.xz/TEXS).xyz*2.-1.; normal=normalize(normal+(viewMatrix*vec4(tn.x*1.2,0.,-tn.y*1.2,0.)).xyz); }')
+    .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = skinBump(-vViewPosition, normal, sH, faceDirection);\nif(vWN.y>.5){ vec3 tn=texture(uNrm,vWPos.xz/TEXS).xyz*2.-1.; normal=normalize(normal+(viewMatrix*vec4(tn.x,0.,-tn.y,0.)).xyz*(.6+.7*uDry)); }')
     .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += sCol*vec3(.04,.02,.014)*sS;');
 };
 const blockGeo = new THREE.BoxGeometry(2*W, TOP-BOT, 2*D, 320, 1, 256);
