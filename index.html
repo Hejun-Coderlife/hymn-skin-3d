@@ -88,6 +88,7 @@ body.nolabel .lbl{opacity:0!important}
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 
 /* ---------- 状态定义 ---------- */
 const STATES = [
@@ -166,7 +167,8 @@ const R = (a,b) => a + (b-a)*rand();
 const V = (x,y,z) => new THREE.Vector3(x,y,z);
 
 const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+let PR = Math.min(devicePixelRatio, 1.25);
+renderer.setPixelRatio(PR);
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = .9;
@@ -296,7 +298,7 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   c=mix(c,c*vec3(1.03,1.,.94),uOil*.4); r=mix(r,.13,uOil*.9);
   // 黑头：毛孔口发黑
   float bh=0.;
-  for(int i=0;i<40;i++){bh=max(bh,1.-smoothstep(.045,.075,length(q-uFol[i])+(fbm(vec3(q*30.,1.))-.5)*.02));}
+  if(uBlack>.001) for(int i=0;i<40;i++){bh=max(bh,1.-smoothstep(.045,.075,length(q-uFol[i])+(fbm(vec3(q*30.,1.))-.5)*.02));}
   vec3 vb=voro2(q*3.2+5.); bh=max(bh,step(.45,vb.z)*(1.-smoothstep(.025,.05,vb.x+(fbm(vec3(q*30.,2.))-.5)*.015)));
   c=mix(c,L(vec3(.10,.07,.05)),bh*uBlack*.95); H+=bh*uBlack*.004; r=mix(r,.25,bh*uBlack);
   float ld=length(q-LC);
@@ -786,6 +788,23 @@ function updVapor(t, p) {
   vGeo.attributes.position.needsUpdate = true; vGeo.attributes.aA.needsUpdate = true;
 }
 
+/* ---------- 性能：把同材质的静态小模型合并，几百次绘制 → 十几次 ---------- */
+{
+  const buckets = new Map(), dead = [];
+  scene.updateMatrixWorld(true);
+  scene.traverse(o => {
+    if (!o.isMesh || o.isInstancedMesh || o === block || o === frontHair) return;
+    const m = o.material; if (Array.isArray(m) || m.map) return;
+    const g = o.geometry.index ? o.geometry.clone() : null; if (!g) return;
+    for (const k of Object.keys(g.attributes)) if (!['position','normal','uv'].includes(k)) g.deleteAttribute(k);
+    g.applyMatrix4(o.matrixWorld);
+    if (!buckets.has(m)) buckets.set(m, []); buckets.get(m).push(g); dead.push(o);
+  });
+  for (const o of dead) o.parent.remove(o);
+  for (const [m, gs] of buckets) { const mg = mergeGeometries(gs); if (mg) scene.add(new THREE.Mesh(mg, m)); }
+  const empty = []; scene.traverse(o => { if (o.isGroup && !o.children.length) empty.push(o); }); empty.forEach(o => o.parent?.remove(o));
+}
+
 /* ---------- 标注 ---------- */
 const LABELS = [
   ['角质层', [-W+.25, surfY(-W+.25,D)-.04, D]], ['表皮', [-W+.25, surfY(-W+.25,D)-.45, D]], ['真皮', [-W+.25, 1.5, D]], ['皮下脂肪', [-W+.25, -.6, D]],
@@ -856,7 +875,7 @@ const saved = STATES.find(s => s.id === (want||'').split(':')[0] && s.ready) || 
 Object.assign(cur, P0, saved.p);
 const hashA = parseFloat((hashState||'').split(':')[1]); if (!isNaN(hashA)) { cur.acne = hashA; }
 select(saved, true);
-const applyP = () => { U.dry.value = cur.dry; U.oil.value = cur.oil; U.black.value = cur.black; U.acne.value = cur.acne; U.mark.value = cur.mark; U.bar.value = cur.bar; U.red.value = cur.red; U.spot.value = cur.spot; U.sun.value = cur.sun; U.age.value = cur.age; updFlakes(cur.dry); frontHair.position.y = frontHairY + lesBJS(cur.acne); const dv = Math.max(cur.mark, sstep(.66,1,cur.acne), cur.red, cur.sun, cur.bar*.6); dilMat.opacity = dv; dilated.visible = dv > .02; const da = Math.max(cur.red, cur.sun*.9, cur.bar*.6); dilAll.opacity = da; dilatedAll.visible = da > .02; };
+const applyP = () => { U.dry.value = cur.dry; U.oil.value = cur.oil; U.black.value = cur.black; U.acne.value = cur.acne; U.mark.value = cur.mark; U.bar.value = cur.bar; U.red.value = cur.red; U.spot.value = cur.spot; U.sun.value = cur.sun; U.age.value = cur.age; updFlakes(cur.dry); frontHair.position.y = frontHairY + lesBJS(cur.acne); const dv = Math.max(cur.mark, sstep(.66,1,cur.acne), cur.red, cur.sun, cur.bar*.6); dilMat.opacity = dv; dilMat.visible = dv > .02; const da = Math.max(cur.red, cur.sun*.9, cur.bar*.6); dilAll.opacity = da; dilAll.visible = da > .02; };
 if (!isNaN(hashA)) goal.acne = hashA;
 applyP();
 if (hashCam && hashCam.startsWith('hair')) { const f = fol[+hashCam.slice(4)||0], y = surfY(f.x,f.y); camera.position.set(f.x+.35, y+.3, f.y+.45); controls.target.set(f.x, y, f.y); controls.autoRotate = false; }
@@ -869,7 +888,10 @@ addEventListener('resize', () => {
 });
 const clock = new THREE.Clock();
 const ease = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
-let lastMeter = 0;
+let lastMeter = 0, dirty = 3, ft = 1/60, fc = 0;
+controls.addEventListener('change', () => dirty = 2);
+addEventListener('resize', () => dirty = 2);
+document.addEventListener('click', () => dirty = 2);
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
   let moved = false;
@@ -882,9 +904,16 @@ renderer.setAnimationLoop(() => {
     camera.position.lerpVectors(camTween.p0, camTween.p1, e); controls.target.lerpVectors(camTween.t0, camTween.t1, e);
     if (camTween.t >= 1) camTween = null;
   }
-  controls.update();
-  renderer.render(scene, camera);
-  updLabels();
+  const camMoved = controls.update() || camTween || controls.autoRotate;
+  const busy = moved || camMoved || cur.leak > .2 || dirty > 0;
+  if (dirty > 0) dirty--;
+  if (busy) {
+    renderer.render(scene, camera);
+    updLabels();
+    // 帧率跟不上就自动降一点清晰度（最低 0.75）
+    ft = ft*.92 + dt*.08;
+    if (++fc > 60 && ft > 1/40 && PR > .75) { PR = Math.max(.75, PR - .15); renderer.setPixelRatio(PR); fc = 0; dirty = 2; }
+  }
   if (t - lastMeter > .25) { lastMeter = t; document.getElementById('mOut').textContent = nOut; }
 });
 </script>
