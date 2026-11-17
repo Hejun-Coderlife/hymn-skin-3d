@@ -473,14 +473,15 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     gd=min(gd,length((p.xy-g0-vec2(.36,-.05)*gs)/(vec2(.27,.25)*gs)));
     gd=min(gd,length((p.xy-g0-vec2(.05,-.31)*gs)/(vec2(.3,.23)*gs)));
     gd=min(gd,length((p.xy-g0-vec2(.43,.32)*gs)/(vec2(.23,.2)*gs)));
-    float gduct=segD(p.xy,g0+vec2(-.22,.32),vec2(-2.+(2.98-.7)*.18+.12,2.98));
+    float gduct=segD(p.xy,g0+vec2(-.12,.22),vec2(-2.+(2.98-.7)*.18+.03,2.98));   // 皮脂腺导管：从腺体里伸出，一直通进毛囊管腔
     if(gd<1.){
       vec3 v=voro(vec3(p.xy*13.,.5));
       vec3 gc=mix(L(vec3(1.,.9,.62)),L(vec3(.86,.62,.28)),(1.-smoothstep(0.,.07,v.y))*.8+v.x*.3);
       gc=mix(gc,L(vec3(.72,.46,.36)),smoothstep(.82,1.,gd)*.8);
       float m=smoothstep(1.,.9,gd); c=mix(c,gc,m); H+=m*((1.-v.x)*.012+(1.-gd*gd)*.03); s=.6;
     }
-    if(gduct<.04){float m=smoothstep(.04,.025,gduct); c=mix(c,L(vec3(.96,.86,.66)),m); H+=m*.012;}
+    if(gduct<.03){float m=smoothstep(.03,.018,gduct); vec3 dc=mix(L(vec3(.90,.70,.62)),L(vec3(.98,.84,.52)),smoothstep(.02,.006,gduct));   // 管壁粉、管里是皮脂黄
+      c=mix(c,dc,m); H+=m*.004;}
     vec2 A=vec2(-2.+(1.95-.7)*.18+.15,1.95), Bp=vec2(A.x+1.65,ejY(vec2(A.x+1.65,p.z))-.07), C=vec2(A.x+1.25,1.72);
     float best=9., bt=0.;
     for(int i=0;i<10;i++){ float t0=float(i)/10., t1=float(i+1)/10.;
