@@ -402,7 +402,7 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     c=mix(ret,papC,pap);
     float el=1.-smoothstep(0.,.018,abs(fbm(vec3(wq.x*2.,wq.y*5.,7.))-.5));
     c=mix(c,L(vec3(.95,.82,.55)),el*.45*(1.-pap));
-    H=bundle*.01*(1.-pap)+thin*.003*pap; r=.55; s=.6;
+    H=(bundle*.006*(1.-pap)+thin*.003*pap)*smoothstep(0.,.06,p.y-db); r=.55; s=.6;   // 靠近脂肪层时凹凸归零，交界不出虚线
     float mkD=uMark*(1.-smoothstep(.3,.75,length(q-LC)));
     c=mix(c,L(vec3(.86,.48,.47)),mkD*pap*.25);
     c=mix(c,L(vec3(.36,.2,.13)),mkD*pap*(1.-smoothstep(.04,.08,voro2(du*14.).x))*step(.7,voro2(du*14.).z)*.9);   // 少量吞了黑色素的细胞
@@ -422,7 +422,7 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     fatC=mix(fatC,L(vec3(.80,.56,.30)),ce*.55);
     c=mix(fatC,L(vec3(.90,.68,.62)),septa);
     c=mix(c,L(vec3(.92,.70,.64)),(1.-smoothstep(0.,.12,db-p.y))*.5);
-    H=dome*.05*(1.-septa)-septa*.02; r=mix(.22,.5,septa); s=.3;
+    H=(dome*.05*(1.-septa)-septa*.02)*smoothstep(0.,.08,db-p.y); r=mix(.22,.5,septa); s=.3;   // 靠近真皮交界时凹凸归零
   }
   /* 痘痘发炎：毛囊周围一圈红肿，散着炎症细胞 */
   float a3=smoothstep(.66,1.,uAcne);
@@ -433,7 +433,7 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     c=mix(c,L(vec3(.42,.12,.30)),infl*(1.-smoothstep(.05,.1,voro2(p.xy*30.).x))*.85);
   }
   /* 正面切面上：毛囊、皮脂腺、立毛肌 */
-  if(nw.z>.5 && p.y>1.5 && p.y<sy){
+  if(nw.z>.5 && p.y>1.2 && p.y<sy){
     float fx=-2.+(p.y-.7)*.18, dx=p.x-fx;
     float bulb=smoothstep(2.05,1.7,p.y);
     float rr=.15+.1*bulb+.07*smoothstep(sy-.45,sy,p.y);
@@ -444,7 +444,7 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     if(abs(dx)<rr){
       float u=dx/rr;
       vec3 fc=mix(L(vec3(.89,.64,.58)),L(vec3(.97,.86,.78)),smoothstep(.85,.45,abs(u)));
-      float shaft=(1.-smoothstep(.011,.016,abs(dx)))*step(1.68,p.y);
+      float shaft=(1.-smoothstep(.011,.016,abs(dx)))*smoothstep(1.64,1.7,p.y);   // 毛干末端渐隐进毛球，不留方头
       fc=mix(fc,L(vec3(.22,.13,.09)),shaft);
       float dp=length(vec2(dx,p.y-1.6)/vec2(.08,.11));
       fc=mix(fc,L(vec3(.86,.50,.50)),1.-smoothstep(.8,1.,dp));
@@ -463,8 +463,9 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
       fc=mix(fc,L(vec3(.72,.42,.40)),smoothstep(.8,.93,abs(u))*smoothstep(2.85,3.0,p.y)*max(k1,k2)*.8);   // 囊壁
       float cap=step(sy-.11,p.y)*k1*(1.-k3);                                                   // 闭口：开口被角质封住
       fc=mix(fc,L(vec3(.92,.76,.64)),cap*smoothstep(1.,.6,abs(u)));
-      c=mix(c,fc,smoothstep(1.,.9,abs(u)));
-      H+=(1.-u*u)*.03+shaft*.012+sacIn*max(k1,k2)*.025+innerB*uBlack*.02; s=.8;
+      float endF=smoothstep(1.46,1.56,p.y);   // 毛囊底部渐隐，不再一刀切出横线
+      c=mix(c,fc,smoothstep(1.,.9,abs(u))*endF);
+      H+=endF*(1.-u*u)*.03+shaft*.012+sacIn*max(k1,k2)*.025+innerB*uBlack*.02; s=.8;
     }
     vec2 g0=vec2(-2.+(2.55-.7)*.18+.5,2.55);                    // 皮脂腺：葡萄串状腺泡
     float gs=1.+.65*uOil;
@@ -500,6 +501,8 @@ vec3 skinBump(vec3 sp,vec3 n,float H,float fd){
   vec3 r1=cross(sy,n), r2=cross(n,sx);
   float det=dot(sx,r1)*fd;
   vec2 dB=vec2(dFdx(H),dFdy(H));
+  vec2 lim=vec2(length(sx),length(sy))*1.2;   // 高度在分层交界处是跳变的，GPU 按 2×2 像素算导数会出虚线/台阶：坡度封顶
+  dB=clamp(dB,-lim,lim);
   vec3 g=sign(det)*(dB.x*r1+dB.y*r2);
   return normalize(abs(det)*n-g);
 }
@@ -525,9 +528,9 @@ const block = new THREE.Mesh(blockGeo, skinMat); scene.add(block);
 
 /* ---------- 汗毛（表面）+ 毛孔位置给着色器 ---------- */
 const hairMat = new THREE.MeshPhysicalMaterial({color:'#9a7a64', roughness:.4, sheen:.7, sheenColor:new THREE.Color('#ecd2bf'), transparent:true, opacity:.8});
-function hair(x, z, len, yaw, tilt, sink=.03) {
+function hair(x, z, len, yaw, tilt, sink=.03, bend=R(.02,.05)) {
   // 以固定斜角从毛孔长出，基本是直的，整根只有轻微弧度；根粗梢细
-  const pts = [], bend = R(.02,.05);
+  const pts = [];
   for (let k=0; k<=12; k++) { const l = k/12*len; pts.push(V(Math.sin(tilt)*l + bend*l*l, Math.cos(tilt)*l - bend*.4*l*l, 0)); }
   const curve = new THREE.CatmullRomCurve3(pts), seg = 40, rad = 6;
   const g = new THREE.TubeGeometry(curve, seg, .011, rad, false);
@@ -548,7 +551,8 @@ for (let i=0; i<40; i++) {
 }
 U.fol.value = fol;
 // 切面那根毛囊伸出表面的部分
-const frontHair = hair(fxY(surfY(fxY(3.9),D)), D-.016, 3.6, 0, Math.atan(.18), .1), frontHairY = frontHair.position.y;
+// 根部 x 按下沉后的高度算、不弯，和切面里画的毛干在一条直线上
+const frontHair = hair(fxY(surfY(fxY(3.9),D)-.1), D-.016, 3.6, 0, Math.atan(.18), .1, 0), frontHairY = frontHair.position.y;
 const sstep = (a,b,x) => { const t = Math.min(1, Math.max(0, (x-a)/(b-a))); return t*t*(3-2*t); };
 const lesBJS = a => .08*sstep(0,.33,a) + .09*sstep(.33,.66,a) + .1*sstep(.66,1,a);
 
