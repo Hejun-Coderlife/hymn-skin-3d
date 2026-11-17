@@ -383,34 +383,64 @@ for (const f of ['f','r','b','l']) {
   const deepV = h => db2(f,h) + .02 + .04*Math.cos(h*3.5);
   const up    = h => ej2(f,h) - .5 + .03*Math.sin(h*5);
   const upV   = h => up(h) - .13 + .02*Math.cos(h*6);
-  // 深层血管网（真皮底部）+ 浅层血管网（乳头层下方）
-  run(deepA, .065, artMat, () => false);
-  run(deepV, .075, veinMat, () => false);
-  run(up, .038, artMat, skip);
-  run(upV, .042, veinMat, skip);
-  // 上下贯通的小血管：约每 0.5 一根，动静脉交替，弯弯曲曲
-  let alt = 0;
-  for (let h=-span+.35; h<span-.3; h+=R(.4,.6), alt++) {
-    if (skip(h) || skip(h+.2)) continue;
-    const art = alt%2 === 0, y0 = art ? deepA(h) : deepV(h), y1 = art ? up(h) : upV(h), r = art ? .03 : .035;
-    const pts = []; for (let k=0; k<=6; k++) { const t = k/6; pts.push(onFace(f, h + Math.sin(t*5 + h*3)*.08 + t*.12, y0 + (y1-y0)*t, r*.45)); }
-    tube(pts, r, art ? artMat : veinMat);
-    // 中途分出的细小分支
-    if (rand() < .6) { const t = R(.3,.7), hy = y0 + (y1-y0)*t, dir = rand() < .5 ? -1 : 1;
-      tube([onFace(f,h+.06,hy,.01), onFace(f,h+dir*.2,hy+.12,.01), onFace(f,h+dir*.35,hy+R(.05,.25),.01)], .02, art ? artMat : veinMat); }
-  }
-  // 毛细血管袢：每隔约 0.3 一个，伸进真皮乳头
-  for (let h=-span+.2; h<span-.15; h+=R(.26,.36)) {
+  // 深层 / 浅层血管网：一段一段、弯曲、时隐时现（血管网是立体的，切面上只露出片段）
+  const segRun = (fn, r0, m, sk, yj) => {
+    let h = -span + R(0,.3);
+    while (h < span - .2) {
+      const len = R(.6, 1.9), pts = [], ph = R(0,6);
+      for (let x=h; x<=Math.min(h+len, span-.03); x+=.12) { if (sk(x)) break; pts.push(onFace(f, x, fn(x) + Math.sin(x*R(3,6)+ph)*yj, r0*.45)); }
+      if (pts.length > 2) tube(pts, r0*R(.8,1.15), m);
+      h += len + R(.15,.6);
+    }
+  };
+  segRun(deepA, .06, artMat, () => false, .06);
+  segRun(deepV, .07, veinMat, () => false, .06);
+  segRun(up, .034, artMat, skip, .05);
+  segRun(upV, .038, veinMat, skip, .05);
+  // 烛台状上行血管：主干弯曲上行，到浅层分 2~3 支
+  const climbs = Math.round(span*.9);
+  for (let i=0; i<climbs; i++) {
+    const h = -span + (i+.5)*(2*span/climbs) + R(-.35,.35);
     if (skip(h)) continue;
-    const top = ej2(f,h) - .07, base = up(h), w = .045;
-    tube([onFace(f,h-w,base,.012), onFace(f,h-w*.9,(base+top)/2,.012), onFace(f,h-w*.6,top-.06,.012), onFace(f,h,top,.012),
-          onFace(f,h+w*.6,top-.06,.012), onFace(f,h+w*.9,(base+top)/2,.012), onFace(f,h+w,upV(h)+.02,.012)], .026, capMat);
+    const art = rand() < .55, y0 = art ? deepA(h) : deepV(h), ym = (y0 + up(h))*.5 + R(-.2,.2), r = art ? .03 : .034, m = art ? artMat : veinMat;
+    const trunk = []; const ph = R(0,6);
+    for (let k=0; k<=5; k++) { const t = k/5; trunk.push(onFace(f, h + Math.sin(t*3+ph)*.1, y0 + (ym-y0)*t, r*.45)); }
+    tube(trunk, r, m);
+    const nb = 2 + (rand() < .5 ? 1 : 0);
+    for (let j=0; j<nb; j++) {
+      const dx = (j - (nb-1)/2)*R(.2,.35), yt = (art ? up(h+dx) : upV(h+dx)) + R(-.08,.05);
+      tube([onFace(f,h,ym,.012), onFace(f,h+dx*.5,ym+(yt-ym)*.5+R(-.05,.05),.012), onFace(f,h+dx,yt,.012)], r*.7, m);
+    }
   }
-  // 脂肪间隔里往下走的血管
-  for (let i=0; i<3; i++) {
+  // 毛细血管袢：高矮不一、间距不均、有的歪、有的只切到一侧
+  for (let h=-span+R(.1,.3); h<span-.15; h+=R(.22,.55)) {
+    if (skip(h)) continue;
+    const top = ej2(f,h) - R(.06,.18), base = up(h) + R(-.03,.05), w = R(.03,.055), lean = R(-.06,.06), r = R(.017,.025);
+    const L = [onFace(f,h-w,base,.01), onFace(f,h-w*.9+lean*.5,(base+top)/2,.01), onFace(f,h-w*.5+lean,top-.05,.01), onFace(f,h+lean,top,.01)];
+    const Rr = [onFace(f,h+w*.5+lean,top-.05,.01), onFace(f,h+w*.9+lean*.5,(base+top)/2,.01), onFace(f,h+w,upV(h)+.02,.01)];
+    const kind = rand();
+    if (kind < .65) tube([...L, ...Rr], r, capMat);
+    else if (kind < .85) tube(L, r, capMat);           // 只切到上行支
+    else tube([L[3], ...Rr], r, veinMat);               // 只切到回流支
+  }
+  // 切面上的血管断口：横着走的血管被切断，露出一个个椭圆小口
+  for (let i=0; i<Math.round(span*5); i++) {
+    const h = R(-span+.15, span-.15); if (skip(h)) continue;
+    const lo = db2(f,h) + .05, hi = ej2(f,h) - .25, y = rand() < .6 ? (rand() < .5 ? up(h) : deepA(h)) + R(-.25,.25) : R(lo, hi);
+    const art = rand() < .5, rr = R(.022,.05);
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(rr, rr, .05, 14), art ? artMat : veinMat);
+    const lum = new THREE.Mesh(new THREE.CircleGeometry(rr*.55, 14), new THREE.MeshStandardMaterial({color: art ? '#4a0c10' : '#161c3a', roughness:.6}));
+    const P = onFace(f, h, Math.min(Math.max(y, lo), hi), 0), sg = (f === 'f' || f === 'r') ? 1 : -1;
+    cyl.scale.set(1, 1, R(1,1.6)); lum.scale.set(1, R(1,1.6), 1);
+    if (alongX(f)) { cyl.rotation.x = Math.PI/2; cyl.position.set(P.x, P.y, P.z); lum.position.set(P.x, P.y, P.z + sg*.026); lum.rotation.y = sg > 0 ? 0 : Math.PI; }
+    else { cyl.rotation.z = Math.PI/2; cyl.position.set(P.x, P.y, P.z); lum.position.set(P.x + sg*.026, P.y, P.z); lum.rotation.y = sg*Math.PI/2; }
+    scene.add(cyl, lum);
+  }
+  // 脂肪间隔里往下走的血管（2 根，弯曲）
+  for (let i=0; i<2; i++) {
     const h0 = R(-span+.6, span-.6), art = i%2 === 0, pts = [];
-    for (let k=0; k<=8; k++) { const t = k/8; pts.push(onFace(f, h0 + Math.sin(t*4+i)*.35 + t*R(-.3,.3), (art ? deepA(h0) : deepV(h0)) - t*R(2.2,3.3), .02)); }
-    tube(pts, art ? .045 : .05, art ? artMat : veinMat);
+    for (let k=0; k<=8; k++) { const t = k/8; pts.push(onFace(f, h0 + Math.sin(t*4+i)*.35 + t*R(-.3,.3), (art ? deepA(h0) : deepV(h0)) - t*R(1.8,3.2), .02)); }
+    tube(pts, art ? .042 : .048, art ? artMat : veinMat);
   }
 }
 // 脂肪层里被切断的血管（露出管腔）
