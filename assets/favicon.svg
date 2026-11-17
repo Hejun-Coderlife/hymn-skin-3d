@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 每日海报网址图标：页面同款品牌粉底 + 白色 Didot「i」（image）；同盘点表的 P 图标一个路数 -->
+  <rect width="64" height="64" rx="12" fill="#B9808B"/>
+  <text x="32" y="50" text-anchor="middle" font-family="Didot, Bodoni 72, Georgia, serif" font-weight="400" font-size="52" fill="#FFFFFF">i</text>
+</svg>
