@@ -352,17 +352,24 @@ const block = new THREE.Mesh(blockGeo, skinMat); scene.add(block);
 
 /* ---------- 汗毛（表面）+ 毛孔位置给着色器 ---------- */
 const hairMat = new THREE.MeshPhysicalMaterial({color:'#7a5a46', roughness:.4, sheen:.6, sheenColor:new THREE.Color('#d8b8a0'), transparent:true, opacity:.9});
-function hair(x, z, len, yaw, tilt, sink=.06) {
-  const g = new THREE.CylinderGeometry(.004, .014, len, 6, 10); g.translate(0, len/2, 0);
-  const p = g.attributes.position;
-  for (let i=0; i<p.count; i++) { const y = p.getY(i); p.setX(i, p.getX(i) + .18*(y/len)**2*len); }
+function hair(x, z, len, yaw, tilt, sink=.05) {
+  // 以固定斜角从毛孔长出，基本是直的，整根只有轻微弧度；根粗梢细
+  const pts = [], bend = R(.04,.1);
+  for (let k=0; k<=12; k++) { const l = k/12*len; pts.push(V(Math.sin(tilt)*l + bend*l*l, Math.cos(tilt)*l - bend*.4*l*l, 0)); }
+  const curve = new THREE.CatmullRomCurve3(pts), seg = 40, rad = 6;
+  const g = new THREE.TubeGeometry(curve, seg, .014, rad, false);
+  const p = g.attributes.position, c = V();
+  for (let i=0; i<=seg; i++) {
+    const t = i/seg; curve.getPointAt(t, c); const k = 1 - .72*t;
+    for (let j=0; j<=rad; j++) { const id = i*(rad+1)+j; p.setXYZ(id, c.x + (p.getX(id)-c.x)*k, c.y + (p.getY(id)-c.y)*k, c.z + (p.getZ(id)-c.z)*k); }
+  }
   g.computeVertexNormals();
-  const m = new THREE.Mesh(g, hairMat); m.position.set(x, surfY(x,z)-sink, z); m.rotation.set(0, yaw, -tilt); scene.add(m);
+  const m = new THREE.Mesh(g, hairMat); m.position.set(x, surfY(x,z)-sink, z); m.rotation.y = yaw; scene.add(m);
 }
 const fol = [];
 for (let i=0; i<14; i++) {
   let x, z; do { x = R(-4.4,4.4); z = R(-3.4,3.4); } while (fol.some(f => f.distanceTo(new THREE.Vector2(x,z)) < 1.2));
-  fol.push(new THREE.Vector2(x,z)); hair(x, z, R(.45,.85), R(0,6.28), R(.7,1.05));   // 脸上的毫毛：细、短、颜色浅
+  fol.push(new THREE.Vector2(x,z)); hair(x, z, R(.45,.85), R(0,6.28), R(.75,1.05));   // 脸上的毫毛：细、短、颜色浅
 }
 U.fol.value = fol;
 // 切面那根毛囊伸出表面的部分
