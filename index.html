@@ -349,13 +349,15 @@ const veinMat = new THREE.MeshPhysicalMaterial({color:'#3f4d8c', roughness:.32, 
 const capMat = new THREE.MeshPhysicalMaterial({color:'#c8333b', roughness:.35});
 const ductMat = new THREE.MeshPhysicalMaterial({color:'#f2cfc4', roughness:.4, sheen:.5, sheenColor:new THREE.Color('#ffd0c0')});
 const tube = (pts, r, m) => scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.max(24, pts.length*6), r, 10), m));
-// face: 'f' = 正面 z=D，沿 x；'r' = 右面 x=W，沿 z
-const onFace = (f, h, y, inset=.025) => f === 'f' ? V(h, y, D - inset) : V(W - inset, y, h);
-const ej2 = (f,h) => f === 'f' ? ejY(h, D) : ejY(W, h);
-const db2 = (f,h) => f === 'f' ? dbY(h, D) : dbY(W, h);
+// 四个切面：f 正面 z=+D / b 背面 z=-D（沿 x）；r 右面 x=+W / l 左面 x=-W（沿 z）
+const alongX = f => f === 'f' || f === 'b';
+const onFace = (f, h, y, inset=.025) => f === 'f' ? V(h, y, D - inset) : f === 'b' ? V(h, y, -D + inset) : f === 'r' ? V(W - inset, y, h) : V(-W + inset, y, h);
+const faceXZ = (f, h) => f === 'f' ? [h, D] : f === 'b' ? [h, -D] : f === 'r' ? [W, h] : [-W, h];
+const ej2 = (f,h) => ejY(...faceXZ(f,h));
+const db2 = (f,h) => dbY(...faceXZ(f,h));
 const folX = fxY(3.2);
-for (const f of ['f','r']) {
-  const span = f === 'f' ? W : D;
+for (const f of ['f','r','b','l']) {
+  const span = alongX(f) ? W : D;
   const skip = h => f === 'f' && Math.abs(h - folX) < .55;
   const skipDeep = h => f === 'f' && Math.abs(h - fxY(.9)) < .35;
   const run = (fn, r, m, sk) => {
@@ -374,25 +376,27 @@ for (const f of ['f','r']) {
   run(up, .035, artMat, skip);
   run(h => up(h) - .14, .04, veinMat, skip);
   // 上下连接
-  for (const h of (f === 'f' ? [-4.1, -.5, 2.6, 4.3] : [-3.1, -.6, 2.2])) {
+  for (const h of ({f:[-4.1, -.5, 2.6, 4.3], b:[-3.6, -1.2, 1.4, 3.8], r:[-3.1, -.6, 2.2], l:[-2.7, .4, 2.9]})[f]) {
     tube([onFace(f,h,db2(f,h)+.17), onFace(f,h+.1,(db2(f,h)+up(h))/2), onFace(f,h+.15,up(h+.15))], .03, artMat);
   }
   // 毛细血管袢：伸进每个真皮乳头
-  const k0 = Math.ceil((-span*3.3 - (f === 'f' ? .4 : -.2) - Math.PI/2) / (2*Math.PI));
+  const fr = alongX(f) ? 3.3 : 3.1, ph = alongX(f) ? .4 : -.2;
+  const k0 = Math.ceil((-span*fr - ph - Math.PI/2) / (2*Math.PI));
   for (let k=k0; ; k++) {
-    const h = (Math.PI/2 - (f === 'f' ? .4 : -.2) + 2*Math.PI*k) / (f === 'f' ? 3.3 : 3.1);
+    const h = (Math.PI/2 - ph + 2*Math.PI*k) / fr;
     if (h > span - .2) break; if (h < -span + .2 || skip(h)) continue;
     const top = ej2(f,h);
     tube([onFace(f,h-.07,up(h)), onFace(f,h-.05,top-.16), onFace(f,h,top-.07), onFace(f,h+.05,top-.16), onFace(f,h+.07,up(h)-.14)], .022, capMat);
   }
 }
 // 脂肪层里被切断的血管（露出管腔）
-for (const [f,h,y] of [['f',-3.3,-1.4],['f',.7,-2.5],['f',3.4,-1.0],['r',-1.6,-1.9],['r',2.1,-.8]]) {
+for (const [f,h,y] of [['f',-3.3,-1.4],['f',.7,-2.5],['f',3.4,-1.0],['r',-1.6,-1.9],['r',2.1,-.8],['b',-2.2,-1.1],['b',2.6,-2.3],['l',-1.2,-1.6],['l',2.4,-2.6]]) {
   for (const [dh, r, m, lum] of [[0,.065,artMat,'#5a0f12'],[.19,.08,veinMat,'#1b2244']]) {
     const c = new THREE.Mesh(new THREE.CylinderGeometry(r, r, .16, 20), m);
     const disc = new THREE.Mesh(new THREE.CircleGeometry(r*.55, 20), new THREE.MeshStandardMaterial({color:lum, roughness:.6}));
-    if (f === 'f') { c.rotation.x = Math.PI/2; c.position.set(h+dh, y, D+.03); disc.position.set(h+dh, y, D+.111); }
-    else { c.rotation.z = Math.PI/2; c.position.set(W+.03, y, h+dh); disc.position.set(W+.111, y, h+dh); disc.rotation.y = Math.PI/2; }
+    const sg = (f === 'f' || f === 'r') ? 1 : -1;
+    if (alongX(f)) { c.rotation.x = Math.PI/2; c.position.set(h+dh, y, sg*(D+.03)); disc.position.set(h+dh, y, sg*(D+.111)); disc.rotation.y = sg > 0 ? 0 : Math.PI; }
+    else { c.rotation.z = Math.PI/2; c.position.set(sg*(W+.03), y, h+dh); disc.position.set(sg*(W+.111), y, h+dh); disc.rotation.y = sg*Math.PI/2; }
     scene.add(c, disc);
   }
 }
