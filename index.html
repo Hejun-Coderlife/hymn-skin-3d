@@ -168,7 +168,7 @@ const R = (a,b) => a + (b-a)*rand();
 const V = (x,y,z) => new THREE.Vector3(x,y,z);
 
 const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
-let PR = Math.min(devicePixelRatio, 1.25);
+let PR = Math.min(devicePixelRatio, 1.5);
 renderer.setPixelRatio(PR);
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -964,6 +964,7 @@ renderer.setAnimationLoop(() => {
     if (!hiOn) {   // 帧率跟不上就自动降一点清晰度（最低 0.75）
       ft = ft*.92 + dt*.08;
       if (++fc > 60 && ft > 1/40 && PR > .75) { PR = Math.max(.75, PR - .15); renderer.setPixelRatio(PR); fc = 0; dirty = 2; }
+      else if (fc > 90 && ft < 1/55 && PR < Math.min(devicePixelRatio, 1.5)) { PR = Math.min(Math.min(devicePixelRatio, 1.5), PR + .15); renderer.setPixelRatio(PR); fc = 0; }   // 跟得上就加回去，别卡过一次就一直糊
     }
   }
   if (t - lastMeter > .25) { lastMeter = t; document.getElementById('mOut').textContent = nOut; }
