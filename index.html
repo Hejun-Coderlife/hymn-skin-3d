@@ -103,8 +103,18 @@ const STATES = [
    see:'紧绷、起皮、上妆卡粉，细纹更明显',
    under:'细胞间脂质变少，角质翘起、皮纹变深，水从表面加速跑掉',
    care:'补水的同时补脂质（如神经酰胺）；洗脸水别太烫，别过度清洁'},
-  {id:'barrier', name:'屏障受损 · 敏感'},
-  {id:'red', name:'泛红'},
+  {id:'barrier', name:'屏障受损 · 敏感', ready:true,
+   p:{dry:.4, leak:.6, bar:1},
+   cam:{pos:[3.2,6.2,9.6], tgt:[0,3.2,2.4]},
+   see:'发红、发烫、刺痛，换护肤品容易不耐受',
+   under:'角质层变薄、出现缺口，“水泥”流失；外界刺激物钻进来，水分跑出去，下面的小血管也跟着扩张',
+   care:'精简护肤、停用刺激性产品；温和清洁，加强保湿修护，严格防晒'},
+  {id:'red', name:'泛红', ready:true,
+   p:{red:1},
+   cam:{pos:[6,7.6,11.2], tgt:[0,2.6,1.4]},
+   see:'脸颊、鼻翼一片红，冷热交替、情绪激动时更明显，有时看得到细小红血丝',
+   under:'真皮浅层的小血管扩张、充血，透过表皮显出红色',
+   care:'避免过冷过热、少吃辛辣，别过度去角质；温和修护，严格防晒。长期明显泛红建议看皮肤科'},
   {id:'oily', name:'油性 · 毛孔粗大', ready:true,
    p:{oil:1},
    cam:{pos:[2.6,6.6,10.4], tgt:[-1.1,2.9,2.2]},
@@ -113,7 +123,7 @@ const STATES = [
    care:'温和控油清洁，别洗到紧绷；用清爽型保湿，定期清理毛孔'},
   {id:'blackhead', name:'黑头', ready:true,
    p:{oil:.45, black:1},
-   cam:{pos:[.8,5.7,9.6], tgt:[-1.3,3.0,3.2]},
+   cam:{pos:[.6,6.3,8.8], tgt:[-1.4,3.1,3.0]},
    see:'鼻头、下巴毛孔里的小黑点，挤出来是一小条',
    under:'皮脂和老废角质堵在毛孔里，开口敞着，顶端接触空气氧化，看起来发黑——不是脏东西',
    care:'规律清洁、温和去角质；别用手挤，越挤毛孔越粗'},
@@ -129,9 +139,24 @@ const STATES = [
    see:'痘好了留下红色或褐色的印子，平的，不凸不凹',
    under:'红印：发炎过的地方小血管还扩张着；褐印：发炎刺激黑色素变多，留在表皮里',
    care:'严格防晒，别再抠；多数会慢慢变淡，需要耐心'},
-  {id:'spot', name:'色斑 · 暗沉'},
-  {id:'sunburn', name:'晒伤'},
-  {id:'aging', name:'衰老 · 细纹'},
+  {id:'spot', name:'色斑 · 暗沉', ready:true,
+   p:{spot:1},
+   cam:{pos:[4.5,8.4,10.4], tgt:[0,2.9,1.2]},
+   see:'肤色不均，有一块块褐色斑，整体发黄发暗、没光泽',
+   under:'基底层的黑色素细胞变活跃，黑色素增多并往上送，堆在表皮里',
+   care:'每天防晒是第一位；配合温和提亮、保湿，坚持才看得到变化'},
+  {id:'sunburn', name:'晒伤', ready:true,
+   p:{sun:1, leak:.35},
+   cam:{pos:[5,7.2,10.6], tgt:[0,2.8,1.8]},
+   see:'暴晒后发红、发烫、刺痛，几天后可能脱皮',
+   under:'紫外线伤到表皮细胞，出现“晒伤细胞”；真皮里的小血管扩张充血，所以又红又烫',
+   care:'先冷敷降温，用温和的保湿修护，避开阳光；起水疱或大面积晒伤要看医生'},
+  {id:'aging', name:'衰老 · 细纹', ready:true,
+   p:{age:1, dry:.3, leak:.25},
+   cam:{pos:[2.5,7.4,13.5], tgt:[-.6,2.4,1.5]},
+   see:'出现细纹和皱纹，皮肤变薄、松弛，弹性变差',
+   under:'表皮变薄、和真皮的交界变平；真皮里胶原变少、断裂，弹力纤维变形结团，撑不住就塌出纹路',
+   care:'每天防晒（紫外线是皮肤老化的重要原因），做好保湿，规律护理，越早开始越好'},
 ];
 
 /* ---------- 基础 ---------- */
@@ -181,7 +206,7 @@ const ridge = (x,z) => .08*(Math.sin(x*3.3+.4) + Math.sin(z*3.1-.2)) + .03*Math.
 const ejY = (x,z) => surfY(x,z) - .82 + ridge(x,z);     // 表皮/真皮交界
 const dbY = (x,z) => .25 + .15*Math.sin(x*1.1+.3) + .12*Math.cos(z*1.3);       // 真皮/脂肪交界
 const fxY = y => -2 + (y-.7)*.18;                                               // 切面上那根毛囊的中心线
-const U = {dry:{value:0}, oil:{value:0}, black:{value:0}, acne:{value:0}, mark:{value:0}, fol:{value:[]}, col:{value:null}, nrm:{value:null}};
+const U = {dry:{value:0}, oil:{value:0}, black:{value:0}, acne:{value:0}, mark:{value:0}, bar:{value:0}, red:{value:0}, spot:{value:0}, sun:{value:0}, age:{value:0}, fol:{value:[]}, col:{value:null}, nrm:{value:null}};
 { // 照片级毛孔贴图（Human Materials 1, CC0）
   const ld = new THREE.TextureLoader();
   const set = t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
@@ -191,7 +216,7 @@ const U = {dry:{value:0}, oil:{value:0}, black:{value:0}, acne:{value:0}, mark:{
 
 /* ---------- 皮肤块：程序化组织纹理 ---------- */
 const NOISE = /* glsl */`
-uniform float uDry, uOil, uBlack, uAcne, uMark;
+uniform float uDry, uOil, uBlack, uAcne, uMark, uBar, uRed, uSpot, uSun, uAge;
 const vec2 LC=vec2(-1.42,4.);   // 病灶：正面切开的那根毛囊的开口
 uniform vec2 uFol[40];
 varying vec3 vWPos; varying vec3 vWN;
@@ -209,9 +234,13 @@ vec3 voro2(vec2 p){vec2 i=floor(p),f=fract(p);float d1=8.,d2=8.,id=0.;
  for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){vec2 g=vec2(x,y);vec2 r=g+h33(vec3(i+g,7.)).xy-f;float d=dot(r,r);
   if(d<d1){d2=d1;d1=d;id=h13(vec3(i+g,3.));}else if(d<d2)d2=d;}
  d1=sqrt(d1);d2=sqrt(d2);return vec3(d1,d2-d1,id);}
+float grooves(vec2 q){
+  return max(max(exp(-pow((q.x+3.2-.25*sin(q.y*.7))/.09,2.))*.8, exp(-pow((q.x+.35-.3*sin(q.y*.6+1.))/.1,2.))),
+             exp(-pow((q.x-1.9-.2*sin(q.y*.8+2.))/.08,2.))*.65);
+}
 float lesB(vec2 q){   // 闭口/痘痘把皮肤顶起来的鼓包
   float s1=smoothstep(0.,.33,uAcne), s2=smoothstep(.33,.66,uAcne), s3=smoothstep(.66,1.,uAcne);
-  float R=.3+.28*s3, d=length(q-LC); return (.05*s1+.06*s2+.14*s3)*exp(-d*d/(R*R));
+  float R=.32+.26*s2+.1*s3, d=length(q-LC); return -uAge*.2*grooves(q)+ (.08*s1+.09*s2+.1*s3)*exp(-d*d/(R*R))+uBlack*.035*exp(-d*d/.03);
 }
 float surfY(vec2 q){return 3.9+.1*sin(q.x*.8+.3)*cos(q.y*.9-.5)+.05*sin(q.x*1.9-q.y*1.3+1.)+lesB(q);}
 /* 表面真实下凹：皮纹沟 + 毛孔（几何位移，边缘渐隐以免和切面错位） */
@@ -232,8 +261,9 @@ vec3 L(vec3 c){return pow(c,vec3(2.2));}
 float ejY(vec2 q){float x=q.x,z=q.y;
   float r=.08*(sin(x*3.3+.4)+sin(z*3.1-.2))+.03*sin(x*8.3-z*6.1+1.7)
     -.16*pow(.5+.5*sin(x*6.1+1.1+.7*sin(x*2.3)),6.)-.12*pow(.5+.5*sin(z*5.7-.4+.7*sin(z*1.9)),6.);
-  return surfY(q)-.82+r;}
+  return surfY(q)-(.82-.22*uAge)+r*(1.-.75*uAge);}
 float dbY(vec2 q){return .25+.15*sin(q.x*1.1+.3)+.12*cos(q.y*1.3);}
+float spotP(vec2 q){return smoothstep(.55,.61,fbm(vec3(q*.75,41.))+(fbm(vec3(q*6.,42.))-.5)*.08);}
 float segD(vec2 p,vec2 a,vec2 b){vec2 pa=p-a,ba=b-a;float h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.);return length(pa-ba*h);}
 
 /* 表面：皮纹、毛孔、干燥时翘起的皮屑 */
@@ -265,30 +295,56 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   // 油性：泛油光
   c=mix(c,c*vec3(1.03,1.,.94),uOil*.4); r=mix(r,.13,uOil*.9);
   // 黑头：毛孔口发黑
-  c=mix(c,L(vec3(.2,.14,.1)),pore*uBlack*.85*step(.3,vp.z+pore));
+  float bh=0.;
+  for(int i=0;i<40;i++){bh=max(bh,1.-smoothstep(.045,.075,length(q-uFol[i])+(fbm(vec3(q*30.,1.))-.5)*.02));}
+  vec3 vb=voro2(q*3.2+5.); bh=max(bh,step(.45,vb.z)*(1.-smoothstep(.025,.05,vb.x+(fbm(vec3(q*30.,2.))-.5)*.015)));
+  c=mix(c,L(vec3(.10,.07,.05)),bh*uBlack*.95); H+=bh*uBlack*.004; r=mix(r,.25,bh*uBlack);
   float ld=length(q-LC);
-  c=mix(c,L(vec3(.12,.08,.06)),(1.-smoothstep(.05,.1,ld))*uBlack);
+  c=mix(c,L(vec3(.08,.05,.04)),(1.-smoothstep(.12,.17,ld))*uBlack);
   // 闭口：发白的小鼓包；痘痘：红肿 + 中间白头
   float s1=smoothstep(0.,.33,uAcne), s2=smoothstep(.33,.66,uAcne), s3=smoothstep(.66,1.,uAcne);
-  c=mix(c,L(vec3(.94,.84,.76)),exp(-ld*ld/.05)*(.35*s1+.25*s2)*(1.-.6*s3));
+  c=mix(c,L(vec3(.97,.92,.86)),exp(-ld*ld/(.025+.03*s2))*(.6*s1+.25*s2)*(1.-.5*s3));
   float red=exp(-ld*ld/.3)*s3; c=mix(c,L(vec3(.74,.22,.24))*(.9+.2*fbm(vec3(q*8.,6.))),red*.9);
   c=mix(c,L(vec3(.97,.91,.72)),(1.-smoothstep(.06,.12,ld))*s3);
   H+=-(1.-smoothstep(.0,.1,ld))*.01*(1.-s1);
   // 痘印：红印在中间，褐印在外圈，边缘不规则
-  float mk=uMark*(1.-smoothstep(.25,.65,ld+(fbm(vec3(q*5.,3.))-.5)*.25));
-  c=mix(c,mix(L(vec3(.50,.30,.21)),L(vec3(.74,.30,.30)),1.-smoothstep(.12,.4,ld)),mk*.85);
+  float edgeN=(fbm(vec3(q*3.5,3.))-.5)*.35+(fbm(vec3(q*11.,7.))-.5)*.12;
+  float mk=uMark*(1.-smoothstep(.36,.46,ld+edgeN));
+  float redC=1.-smoothstep(.1,.32,ld+edgeN*.6);
+  vec3 tint=mix(vec3(.80,.64,.56),vec3(.98,.6,.58),redC)*(.94+.1*fbm(vec3(q*14.,5.)));   // 外褐内红，带斑驳
+  c*=mix(vec3(1.),tint,mk);
+  // 屏障受损：泛红、暗哑、细碎脱屑
+  c*=mix(vec3(1.),vec3(1.,.74,.72),uBar*(.6+.3*fbm(vec3(q*1.1,22.)))); r=mix(r,.68,uBar*.6);
+  c=mix(c,L(vec3(.93,.86,.80)),speck*uBar*.3);
+  // 泛红：一片片的红 + 细小红血丝
+  float rp=smoothstep(.3,.7,fbm(vec3(q*.9,21.)));
+  c*=mix(vec3(1.),vec3(1.,.66,.64),uRed*(.55+.4*rp));
+  float tel=(1.-smoothstep(0.,.014,abs(fbm(vec3(q*2.2,30.))-.5)))*step(.48,fbm(vec3(q*.8,31.)));
+  c=mix(c,L(vec3(.74,.22,.24)),tel*uRed*.55);
+  // 色斑 · 暗沉：一块块褐斑 + 整体发黄发暗
+  float sp=spotP(q);
+  c*=mix(vec3(1.),vec3(.70,.56,.48)*(.95+.1*fbm(vec3(q*12.,43.))),uSpot*sp*.9);
+  c=mix(c,c*vec3(.9,.86,.8),uSpot*.6); r=mix(r,.62,uSpot*.5);
+  // 晒伤：整片发红
+  c*=mix(vec3(1.),vec3(1.,.64,.6),uSun*(.8+.2*rp));
+  // 衰老：皱纹沟更深更暗、暗哑、零星老年斑
+  float gw=grooves(q);
+  c*=mix(vec3(1.),vec3(.74,.66,.64),gw*uAge*.85);
+  c=mix(c,c*vec3(.92,.89,.86),uAge*.45); r=mix(r,.65,uAge*.5);
+  H-=g2*.006*uAge;
+  c*=mix(vec3(1.),vec3(.8,.66,.58),uAge*smoothstep(.63,.67,fbm(vec3(q*1.3,51.)))*.8);
 }
 /* 切面：角质层 / 表皮 / 真皮 / 皮下脂肪 */
 void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
   vec2 q=p.xz; float d=uDry;
   float ej=ejY(q), db=dbY(q)+(fbm(p*1.3)-.5)*.35;
-  float sy=surfY(q); float scT=sy-(.08+.08*d);
+  float sy=surfY(q); float scT=sy-(.08+.08*d)*(1.-.55*uBar);
   H=0.; r=.55; s=0.;
   if(p.y>scT){
     float lam=sin(p.y*110.+fbm(p*10.)*4.)*.5+.5;
     c=mix(L(vec3(.92,.76,.64)),L(vec3(.85,.68,.57)),lam*.35);
     vec3 vc=voro(vec3(p.x*3.,p.y*20.,p.z*3.));
-    float crack=d*(1.-smoothstep(0.,.04,vc.y))*.6;
+    float crack=max(d,uBar)*(1.-smoothstep(0.,.04,vc.y))*.6;
     c=mix(c,L(vec3(.70,.56,.50)),crack*.7);
     H=lam*.003-crack*.012; r=mix(.45,.8,d); s=.5;
   } else if(p.y>ej){
@@ -302,9 +358,19 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     cc=mix(cc,L(vec3(.60,.38,.42)),(1.-smoothstep(.12,.2,v.x))*.35*(1.-t*.8)*aa);
     float basal=1.-smoothstep(.0,.07,p.y-ej);
     cc=mix(cc,L(vec3(.58,.37,.28)),basal*.6*(.6+.4*v.z));
-    float mkE=uMark*(1.-smoothstep(.3,.7,length(q-LC)));
-    cc=mix(cc,L(vec3(.30,.16,.10)),mkE*(1.-smoothstep(0.,.42,p.y-ej))*.9);                 // 基底层黑色素变多
-    cc=mix(cc,L(vec3(.32,.18,.11)),mkE*(1.-smoothstep(.07,.14,voro2(eu*24.).x))*.85);      // 散在表皮里的黑色素颗粒
+    float mkE=uMark*(1.-smoothstep(.3,.55,length(q-LC)));
+    float gr=1.-smoothstep(.1,.2,voro2(eu*34.).x);
+    cc=mix(cc,L(vec3(.30,.17,.11)),mkE*(1.-smoothstep(.03,.13,p.y-ej))*(.45+.5*gr));      // 基底层一条颗粒状黑色素带
+    cc=mix(cc,L(vec3(.34,.2,.13)),mkE*gr*step(.82,voro2(eu*34.).z)*(1.-smoothstep(.1,.45,p.y-ej))*.8);   // 往上散的少量颗粒
+    float spq=spotP(q);
+    cc=mix(cc,L(vec3(.32,.18,.11)),uSpot*(1.-smoothstep(.03,.16,p.y-ej))*(.35+.45*gr)*(.45+.55*spq));   // 色斑：基底层黑色素整体变多
+    cc=mix(cc,L(vec3(.36,.21,.13)),uSpot*spq*gr*step(.7,voro2(eu*34.).z)*(1.-smoothstep(.1,.6,p.y-ej))*.85);   // 往上送的黑色素
+    float sbc=uSun*step(.8,v.z);                                                                        // 晒伤细胞：粉亮的细胞 + 深色碎核
+    cc=mix(cc,L(vec3(.97,.68,.68)),sbc*(1.-smoothstep(.13,.2,v.x)));
+    cc=mix(cc,L(vec3(.32,.13,.22)),sbc*(1.-smoothstep(.025,.045,v.x)));
+    cc=mix(cc,cc*vec3(1.,.86,.84),uSun*.5);
+    vec3 vi=voro2(eu*22.);                                                                               // 屏障受损：钻进来的刺激物
+    cc=mix(cc,L(vec3(.40,.50,.64)),uBar*step(.88,vi.z)*(1.-smoothstep(.04,.07,vi.x))*(1.-smoothstep(0.,.35,scT-p.y)));
     c=mix(cc,cc*.97+.02,d*.5);
     H=((1.-v.x)*.003+(1.-smoothstep(0.,.1,v.y))*.0015)*aa; r=.5; s=1.;
   } else if(p.y>db){
@@ -315,6 +381,7 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     float n2=fbm(vec3(wq.x*1.0+wq.y*.7,wq.y*7.,4.));               // 第二组束，走向略斜，和第一组交织
     float b1=smoothstep(.42,.62,n1), b2=smoothstep(.47,.66,n2);
     float bundle=max(b1,b2*.85);
+    bundle*=mix(1.,.3+.7*step(.45,fbm(vec3(wq*3.5,61.))),uAge);   // 衰老：胶原断裂、变稀
     float sf=fwidth(wq.y)*26.;
     float fib=mix(.5,fbm(vec3(wq.x*2.2,wq.y*26.,2.)),1.-smoothstep(.25,.7,sf));   // 束内细纤维，远看自动淡出
     vec3 ret=mix(L(vec3(.86,.57,.54)),L(vec3(.95,.76,.71)),bundle);
@@ -326,8 +393,11 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     c=mix(c,L(vec3(.95,.82,.55)),el*.45*(1.-pap));
     H=bundle*.01*(1.-pap)+thin*.003*pap; r=.55; s=.6;
     float mkD=uMark*(1.-smoothstep(.3,.75,length(q-LC)));
-    c=mix(c,L(vec3(.78,.24,.27)),mkD*(pap*.6+.25)*.85);                                                // 浅层小血管还扩张着：发红
-    c=mix(c,L(vec3(.36,.2,.13)),mkD*pap*(1.-smoothstep(.05,.1,voro2(du*14.).x))*.9);         // 被吞下的黑色素
+    c=mix(c,L(vec3(.86,.48,.47)),mkD*pap*.25);
+    c=mix(c,L(vec3(.36,.2,.13)),mkD*pap*(1.-smoothstep(.04,.08,voro2(du*14.).x))*step(.7,voro2(du*14.).z)*.9);   // 少量吞了黑色素的细胞
+    c=mix(c,L(vec3(.84,.40,.40)),(uRed*.45+uSun*.5+uBar*.25)*pap);                                   // 浅层小血管扩张：发红
+    c=mix(c,L(vec3(.94,.84,.80)),uAge*.3);                                                               // 衰老：胶原变少，颜色变淡
+    c=mix(c,L(vec3(.88,.76,.48)),uAge*smoothstep(.62,.7,fbm(vec3(wq.x*3.,wq.y*9.,71.)))*.75);          // 弹力纤维变形结团
   } else {
     vec2 fuv=abs(nw.z)>.5?p.xy:abs(nw.x)>.5?p.zy:p.xz;
     fuv+=(vec2(fbm(vec3(fuv*.55,2.)),fbm(vec3(fuv*.55,7.)))-.5)*1.3;   // 扭弯，真实间隔膜没有直线
@@ -356,10 +426,10 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     float fx=-2.+(p.y-.7)*.18, dx=p.x-fx;
     float bulb=smoothstep(2.05,1.7,p.y);
     float rr=.15+.1*bulb+.07*smoothstep(sy-.45,sy,p.y);
-    float infund=smoothstep(2.9,3.3,p.y);
+    float infund=smoothstep(2.9,3.3,p.y), funnel=smoothstep(2.7,sy,p.y);
     float k1=smoothstep(0.,.33,uAcne), k2=smoothstep(.33,.66,uAcne), k3=smoothstep(.66,1.,uAcne);
-    float bell=exp(-pow((p.y-3.18)/.3,2.));
-    rr+=infund*(.06*uOil+.07*uBlack)+bell*(.11*k1+.12*k2+.08*k3);
+    float bell=exp(-pow((p.y-3.2)/(.3+.12*k2),2.));
+    rr+=infund*.1*uOil+funnel*funnel*.3*uBlack+bell*(.2*k1+.2*k2+.08*k3);
     if(abs(dx)<rr){
       float u=dx/rr;
       vec3 fc=mix(L(vec3(.89,.64,.58)),L(vec3(.97,.86,.78)),smoothstep(.85,.45,abs(u)));
@@ -369,21 +439,24 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
       fc=mix(fc,L(vec3(.86,.50,.50)),1.-smoothstep(.8,1.,dp));
       // 毛囊里的东西
       float inner=smoothstep(.85,.7,abs(u))*infund*(1.-shaft);
+      float innerB=smoothstep(.92,.8,abs(u))*smoothstep(2.75,2.95,p.y);
       float lam=.5+.5*sin(length(vec2(dx*1.6,p.y-3.15))*90.);
       fc=mix(fc,L(vec3(.98,.80,.36)),inner*uOil*.9);                                         // 油：皮脂
       vec3 plug=mix(L(vec3(.86,.74,.52)),L(vec3(.78,.66,.46)),lam*.5);
-      plug=mix(plug,L(vec3(.14,.09,.06)),smoothstep(sy-.25,sy-.05,p.y));                     // 黑头：顶端氧化发黑
-      fc=mix(fc,plug,inner*uBlack);
-      vec3 sac=mix(L(vec3(.97,.91,.74)),L(vec3(.9,.82,.62)),lam*.45);                          // 闭口：一层层角质 + 皮脂
+      plug=mix(plug,L(vec3(.09,.06,.04)),smoothstep(sy-.5,sy-.22,p.y));                      // 黑头：顶端一大块氧化发黑
+      fc=mix(fc,plug,innerB*uBlack);
+      vec3 sac=mix(L(vec3(1.,.97,.9)),L(vec3(.93,.87,.72)),lam*.55);                          // 闭口：一层层白色角质 + 皮脂
       sac=mix(sac,L(vec3(.98,.93,.72)),k3*.6);                                                 // 痘痘：脓
-      fc=mix(fc,sac,inner*max(k1,k2));
-      float cap=step(sy-.09,p.y)*k1*(1.-k3);                                                   // 闭口：开口被角质封住
+      float sacIn=smoothstep(.9,.78,abs(u))*smoothstep(2.85,3.0,p.y)*(1.-shaft);
+      fc=mix(fc,sac,sacIn*max(k1,k2));
+      fc=mix(fc,L(vec3(.72,.42,.40)),smoothstep(.8,.93,abs(u))*smoothstep(2.85,3.0,p.y)*max(k1,k2)*.8);   // 囊壁
+      float cap=step(sy-.11,p.y)*k1*(1.-k3);                                                   // 闭口：开口被角质封住
       fc=mix(fc,L(vec3(.92,.76,.64)),cap*smoothstep(1.,.6,abs(u)));
       c=mix(c,fc,smoothstep(1.,.9,abs(u)));
-      H+=(1.-u*u)*.03+shaft*.012+inner*(uBlack+k1)*.01; s=.8;
+      H+=(1.-u*u)*.03+shaft*.012+sacIn*max(k1,k2)*.025+innerB*uBlack*.02; s=.8;
     }
     vec2 g0=vec2(-2.+(2.55-.7)*.18+.5,2.55);                    // 皮脂腺：葡萄串状腺泡
-    float gs=1.+.5*uOil;
+    float gs=1.+.65*uOil;
     float gd=length((p.xy-g0-vec2(0.,.2)*gs)/(vec2(.33,.27)*gs));
     gd=min(gd,length((p.xy-g0-vec2(.36,-.05)*gs)/(vec2(.27,.25)*gs)));
     gd=min(gd,length((p.xy-g0-vec2(.05,-.31)*gs)/(vec2(.3,.23)*gs)));
@@ -422,7 +495,7 @@ vec3 skinBump(vec3 sp,vec3 n,float H,float fd){
 `;
 const skinMat = new THREE.MeshPhysicalMaterial({roughness:.5, sheen:.25, sheenRoughness:.6, sheenColor:new THREE.Color('#f5dccd'), specularIntensity:.55});
 skinMat.onBeforeCompile = sh => {
-  sh.uniforms.uDry = U.dry; sh.uniforms.uOil = U.oil; sh.uniforms.uBlack = U.black; sh.uniforms.uAcne = U.acne; sh.uniforms.uMark = U.mark; sh.uniforms.uFol = U.fol; sh.uniforms.uCol = U.col; sh.uniforms.uNrm = U.nrm;
+  sh.uniforms.uDry = U.dry; sh.uniforms.uOil = U.oil; sh.uniforms.uBlack = U.black; sh.uniforms.uAcne = U.acne; sh.uniforms.uMark = U.mark; sh.uniforms.uBar = U.bar; sh.uniforms.uRed = U.red; sh.uniforms.uSpot = U.spot; sh.uniforms.uSun = U.sun; sh.uniforms.uAge = U.age; sh.uniforms.uFol = U.fol; sh.uniforms.uCol = U.col; sh.uniforms.uNrm = U.nrm;
   sh.vertexShader = sh.vertexShader
     .replace('#include <common>', '#include <common>\n' + NOISE)
     .replace('#include <begin_vertex>', '#include <begin_vertex>\nif(normal.y>.5) transformed.y += topDisp(transformed.xz, uDry);\nif(transformed.y>3.) transformed.y += lesB(transformed.xz);\nvWPos=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*normal);');
@@ -465,7 +538,7 @@ U.fol.value = fol;
 // 切面那根毛囊伸出表面的部分
 const frontHair = hair(fxY(surfY(fxY(3.9),D)), D-.016, 3.6, 0, Math.atan(.18), .1), frontHairY = frontHair.position.y;
 const sstep = (a,b,x) => { const t = Math.min(1, Math.max(0, (x-a)/(b-a))); return t*t*(3-2*t); };
-const lesBJS = a => .05*sstep(0,.33,a) + .06*sstep(.33,.66,a) + .14*sstep(.66,1,a);
+const lesBJS = a => .08*sstep(0,.33,a) + .09*sstep(.33,.66,a) + .1*sstep(.66,1,a);
 
 /* ---------- 切面上的血管、汗腺（略凸出切面，像解剖标本） ---------- */
 const artMat = new THREE.MeshPhysicalMaterial({color:'#a0262c', roughness:.32, clearcoat:.5, clearcoatRoughness:.3});
@@ -585,6 +658,17 @@ for (const [f,h] of [['f',-3.3],['f',.7],['f',3.4],['r',-1.6],['r',2.1],['b',-2.
     g.rotation.x = Math.PI/2; g.scale.set(1, R(1,1.5), 1); g.position.set(x, BOT - .004, z); scene.add(g);
   }
 }
+// 痘印 / 发炎：病灶下方变粗、发红的毛细血管袢
+const dilMat = new THREE.MeshPhysicalMaterial({color:'#c42a33', roughness:.35, transparent:true, opacity:0});
+const dilAll = new THREE.MeshPhysicalMaterial({color:'#c42a33', roughness:.35, transparent:true, opacity:0});
+const dilated = new THREE.Group(), dilatedAll = new THREE.Group(); scene.add(dilated, dilatedAll);
+const loopOn = (f, h, grp, mat) => {
+  const [x,z] = faceXZ(f,h), top = ejY(x,z) - .1, base = top - R(.3,.42), w = R(.045,.06), r = R(.03,.038);
+  grp.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([onFace(f,h-w,base,.008), onFace(f,h-w*1.05,top-.15,.008), onFace(f,h-w*.5,top-.02,.008), onFace(f,h,top,.008), onFace(f,h+w*.5,top-.02,.008), onFace(f,h+w*1.05,top-.15,.008), onFace(f,h+w,base,.008)]), 36, r, 8), mat));
+};
+for (const h of [-2.15, -1.92, -.38, -.15]) loopOn('f', h, dilated, dilMat);
+for (const f of ['f','r','b','l']) { const span = alongX(f) ? W : D;
+  for (let h=-span+.3; h<span-.25; h+=R(.38,.6)) { if (f === 'f' && h > -2.05 && h < -.45) continue; loopOn(f, h, dilatedAll, dilAll); } }
 // 汗腺：真皮底部一团盘绕的粉色小管——切面上是一圈圈小管断面 + 几段弯管；导管在表皮里呈螺旋
 const glandMat = new THREE.MeshPhysicalMaterial({color:'#d4857c', roughness:.4, sheen:.4, sheenColor:new THREE.Color('#ffd6cc')});
 const glandLum = new THREE.MeshStandardMaterial({color:'#f6dcd2', roughness:.6});
@@ -720,7 +804,7 @@ function updLabels() {
 }
 
 /* ---------- 状态切换 ---------- */
-const P0 = {dry:0, leak:.06, oil:0, black:0, acne:0, mark:0};
+const P0 = {dry:0, leak:.06, oil:0, black:0, acne:0, mark:0, bar:0, red:0, spot:0, sun:0, age:0};
 const cur = {...P0}, goal = {...P0};
 let active = STATES[0], camTween = null;
 const nav = document.getElementById('nav');
@@ -772,7 +856,7 @@ const saved = STATES.find(s => s.id === (want||'').split(':')[0] && s.ready) || 
 Object.assign(cur, P0, saved.p);
 const hashA = parseFloat((hashState||'').split(':')[1]); if (!isNaN(hashA)) { cur.acne = hashA; }
 select(saved, true);
-const applyP = () => { U.dry.value = cur.dry; U.oil.value = cur.oil; U.black.value = cur.black; U.acne.value = cur.acne; U.mark.value = cur.mark; updFlakes(cur.dry); frontHair.position.y = frontHairY + lesBJS(cur.acne); };
+const applyP = () => { U.dry.value = cur.dry; U.oil.value = cur.oil; U.black.value = cur.black; U.acne.value = cur.acne; U.mark.value = cur.mark; U.bar.value = cur.bar; U.red.value = cur.red; U.spot.value = cur.spot; U.sun.value = cur.sun; U.age.value = cur.age; updFlakes(cur.dry); frontHair.position.y = frontHairY + lesBJS(cur.acne); const dv = Math.max(cur.mark, sstep(.66,1,cur.acne), cur.red, cur.sun, cur.bar*.6); dilMat.opacity = dv; dilated.visible = dv > .02; const da = Math.max(cur.red, cur.sun*.9, cur.bar*.6); dilAll.opacity = da; dilatedAll.visible = da > .02; };
 if (!isNaN(hashA)) goal.acne = hashA;
 applyP();
 if (hashCam && hashCam.startsWith('hair')) { const f = fol[+hashCam.slice(4)||0], y = surfY(f.x,f.y); camera.position.set(f.x+.35, y+.3, f.y+.45); controls.target.set(f.x, y, f.y); controls.autoRotate = false; }
