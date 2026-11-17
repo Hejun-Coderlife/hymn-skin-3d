@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>赫眉 · 皮肤 3D 课堂</title>
 <style>
-:root{--pink:#eaa8b1;--deep:#c46f7d;--ink:#3b2a2b;--mute:#9a8584}
+:root{--pink:#eaa8b1;--deep:#eaa8b1;--ink:#f4ece8;--mute:#a8948f}
 *{box-sizing:border-box;margin:0}
-html,body{height:100%;overflow:hidden;color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;background:#f1e8e5}
+html,body{height:100%;overflow:hidden;color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;background:#120b0c}
 canvas{position:fixed;inset:0;display:block;touch-action:none}
 .serif{font-family:"Songti SC","STSong","Noto Serif SC",serif}
 
@@ -24,34 +24,34 @@ nav button.on i{width:34px;height:2px;background:var(--pink);opacity:1}
 nav button[disabled]{cursor:default;opacity:.4}
 nav button small{font-size:10px;letter-spacing:.1em}
 
-.card{z-index:2;position:fixed;right:32px;bottom:32px;width:min(360px,calc(100vw - 64px));padding:22px 24px;background:rgba(255,255,255,.6);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);border:1px solid rgba(255,255,255,.85);box-shadow:0 20px 50px -20px rgba(120,70,75,.3);border-radius:18px;transition:opacity .35s}
+.card{z-index:2;position:fixed;right:32px;bottom:32px;width:min(360px,calc(100vw - 64px));padding:22px 24px;background:rgba(32,19,20,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(234,168,177,.16);border-radius:18px;transition:opacity .35s}
 .card.fade{opacity:0}
 .card h2{font-size:26px;font-weight:600;letter-spacing:.04em}
 .row{display:grid;grid-template-columns:50px 1fr;gap:8px;margin-top:12px}
 .row span{color:var(--deep);font-size:12px;letter-spacing:.08em;padding-top:2px}
 .row p{font-size:15px;line-height:1.55}
-.meter{margin-top:16px;padding-top:12px;border-top:1px solid rgba(160,110,115,.15);font-size:12px;color:var(--mute);display:flex;gap:22px;align-items:flex-end}
-.meter b{display:block;font-size:22px;line-height:1.2;color:#4a8fcf;font-variant-numeric:tabular-nums;font-weight:600}
+.meter{margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--mute);display:flex;gap:22px;align-items:flex-end}
+.meter b{display:block;font-size:22px;line-height:1.2;color:#9fd0ff;font-variant-numeric:tabular-nums;font-weight:600}
 .meter em{font-style:normal;margin-left:auto;display:flex;align-items:center;gap:6px}
 .meter em::before{content:'';width:8px;height:8px;border-radius:50%;background:#9cc8ef}
 
 .tools{z-index:2;position:fixed;right:32px;top:26px;display:flex;gap:8px}
-.tools button{all:unset;cursor:pointer;font-size:13px;padding:6px 14px;border-radius:99px;background:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.85);color:var(--mute);transition:all .3s}
+.tools button{all:unset;cursor:pointer;font-size:13px;padding:6px 14px;border-radius:99px;background:transparent;border:1px solid rgba(234,168,177,.25);color:var(--mute);transition:all .3s}
 .tools button.on,.tools button:hover{color:var(--ink);border-color:var(--pink)}
 
-.foot{position:fixed;left:32px;bottom:22px;font-size:12px;color:#a8908e;pointer-events:none}
+.foot{position:fixed;left:32px;bottom:22px;font-size:12px;color:#7a6663;pointer-events:none}
 
 .lbl{z-index:1;position:fixed;left:0;top:0;pointer-events:none;font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:opacity .3s;will-change:transform}
-.lbl::before{content:'';width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--pink),0 1px 4px rgba(0,0,0,.25);flex:none}
-.lbl span{background:rgba(255,255,255,.82);padding:1px 9px;border-radius:99px;color:var(--ink);box-shadow:0 2px 8px rgba(80,40,40,.12)}
+.lbl::before{content:'';width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--pink),0 0 8px rgba(234,168,177,.6);flex:none}
+.lbl span{background:rgba(18,11,12,.66);padding:1px 9px;border-radius:99px;color:var(--ink)}
 body.nolabel .lbl{opacity:0!important}
 
 @media (max-width:820px){
   header{left:18px;top:16px} header h1{font-size:21px}
-  nav{top:auto;bottom:0;left:0;right:0;transform:none;flex-direction:row;overflow-x:auto;gap:6px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  nav{top:auto;bottom:0;left:0;right:0;transform:none;flex-direction:row;overflow-x:auto;gap:6px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(15,9,10,.75);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
   nav button{white-space:nowrap;padding:5px 12px;border-radius:99px;font-size:14px}
   nav button i{display:none}
-  nav button.on{background:rgba(234,168,177,.35)}
+  nav button.on{background:rgba(234,168,177,.2)}
   .card{left:14px;right:14px;width:auto;bottom:66px;padding:14px 16px}
   .card h2{font-size:20px} .row{margin-top:6px} .row p{font-size:14px}
   .meter{margin-top:10px;padding-top:8px}
@@ -129,9 +129,9 @@ scene.environmentIntensity = .32;
 {
   const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 1024;
   const g = cv.getContext('2d');
-  const lg = g.createLinearGradient(0,0,0,1024); lg.addColorStop(0,'#f8f2f0'); lg.addColorStop(1,'#e8dcd8');
+  const lg = g.createLinearGradient(0,0,0,1024); lg.addColorStop(0,'#1c1213'); lg.addColorStop(1,'#0a0606');
   g.fillStyle = lg; g.fillRect(0,0,1024,1024);
-  const rg = g.createRadialGradient(580,430,0,580,430,560); rg.addColorStop(0,'rgba(255,255,255,.95)'); rg.addColorStop(1,'rgba(255,255,255,0)');
+  const rg = g.createRadialGradient(590,440,0,590,440,560); rg.addColorStop(0,'rgba(90,52,54,.55)'); rg.addColorStop(1,'rgba(90,52,54,0)');
   g.fillStyle = rg; g.fillRect(0,0,1024,1024);
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
   scene.background = tex;
@@ -140,13 +140,13 @@ scene.environmentIntensity = .32;
 const camera = new THREE.PerspectiveCamera(33, innerWidth/innerHeight, .1, 200);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .08;
-controls.minDistance = 3; controls.maxDistance = 40;
+controls.minDistance = 5.5; controls.maxDistance = 40;
 controls.autoRotate = true; controls.autoRotateSpeed = .3;
 
 scene.add(new THREE.HemisphereLight(0xfff6f2, 0x8a6a66, .7));
 const key = new THREE.DirectionalLight(0xfff0e4, 2.1); key.position.set(-4,10,8); scene.add(key);
 const fill = new THREE.DirectionalLight(0xffe6e0, .9); fill.position.set(9,3,6); scene.add(fill);
-const rim = new THREE.DirectionalLight(0xffffff, 1.0); rim.position.set(2,6,-10); scene.add(rim);
+const rim = new THREE.DirectionalLight(0xffd6dc, 1.6); rim.position.set(2,6,-10); scene.add(rim);
 
 /* ---------- 尺寸与层界（JS 与着色器共用同一套公式） ---------- */
 const W = 5, D = 4, TOP = 3.9, BOT = -3.5;
@@ -194,22 +194,27 @@ float segD(vec2 p,vec2 a,vec2 b){vec2 pa=p-a,ba=b-a;float h=clamp(dot(pa,ba)/dot
 /* 表面：皮纹、毛孔、干燥时翘起的皮屑 */
 void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   vec2 q=p.xz; float d=uDry;
-  vec3 v1=voro2(q*1.5); float cr1=1.-smoothstep(0.,.07+.03*d,v1.y);
-  vec3 v2=voro2(q*4.2+3.1); float cr2=1.-smoothstep(0.,.05,v2.y);
-  float n=fbm(vec3(q*6.,1.)), n2=fbm(vec3(q*1.1,4.));
+  vec2 w=q+(vec2(fbm(vec3(q*.7,1.)),fbm(vec3(q*.7,5.)))-.5)*.9;      // 打散，避免规整多边形
+  vec3 v1=voro2(w*1.25); float g1=1.-smoothstep(0.,.16+.06*d,v1.y); g1*=g1;
+  vec3 v2=voro2(w*3.4+3.1); float g2=1.-smoothstep(0.,.12,v2.y); g2*=g2;
+  float grain=fbm(vec3(q*26.,2.)), n2=fbm(vec3(q*.9,4.)), mot=fbm(vec3(q*2.3,8.));
   float pore=0.;
-  for(int i=0;i<8;i++){float dd=length(q-uFol[i]);pore=max(pore,1.-smoothstep(.035,.1,dd));}
-  vec3 vp=voro2(q*2.4+11.); pore=max(pore,step(.6,vp.z)*(1.-smoothstep(.0,.04,vp.x))*.7);
-  vec3 vf=voro2(q*3.+5.); float flake=step(.42,vf.z); float rim=flake*(1.-smoothstep(0.,.08,vf.y));
-  H=-cr1*(.02+.025*d)-cr2*(.006+.008*d)-pore*.03+n*.007+d*(flake*.012+rim*.01);
-  vec3 base=mix(L(vec3(.87,.60,.49)),L(vec3(.82,.52,.44)),smoothstep(.35,.65,n2));
-  base*=.95+.1*n;
-  base=mix(base,base*vec3(.72,.6,.58),cr1*.7+cr2*.3);
-  base=mix(base,L(vec3(.55,.36,.31)),pore*.5);
-  vec3 dc=mix(base,L(vec3(.80,.62,.55)),.35);
-  dc=mix(dc,L(vec3(.95,.88,.82)),rim*.75+flake*.12+cr1*.3+cr2*.15);
+  for(int i=0;i<8;i++){pore=max(pore,1.-smoothstep(.03,.085,length(q-uFol[i])));}
+  vec3 vp=voro2(q*2.2+11.); pore=max(pore,step(.62,vp.z)*(1.-smoothstep(.0,.028,vp.x))*.75);
+  H=-g1*(.022+.02*d)-g2*(.007+.006*d)-pore*.025+(grain-.5)*.004;
+  vec3 base=mix(L(vec3(.88,.70,.58)),L(vec3(.84,.64,.53)),smoothstep(.3,.7,n2));
+  base=mix(base,L(vec3(.86,.60,.52)),smoothstep(.55,.75,mot)*.35);
+  base=mix(base,L(vec3(.74,.56,.45)),smoothstep(.6,.8,fbm(vec3(q*4.,12.)))*.18);
+  base*=.96+.08*grain;
+  base=mix(base,base*vec3(.82,.74,.72),g1*.5+g2*.2);
+  base=mix(base,L(vec3(.50,.36,.30)),pore*.55);
+  float edge=smoothstep(.06,.16,v1.y)*(1.-smoothstep(.16,.3,v1.y));
+  float speck=smoothstep(.62,.72,fbm(vec3(q*9.,3.)));
+  vec3 dc=mix(base,base*vec3(.92,.9,.9)+L(vec3(.05,.045,.04)),.6);
+  dc=mix(dc,L(vec3(.93,.87,.81)),edge*.45+speck*.35);
+  H+=d*(edge*.006+speck*.004);
   c=mix(base,dc,d);
-  r=mix(.4+cr1*.15,.8,d); s=1.;
+  r=mix(.42+g1*.12,.82,d); s=1.;
 }
 /* 切面：角质层 / 表皮 / 真皮 / 皮下脂肪 */
 void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
@@ -220,13 +225,13 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
   if(p.y>scT){
     float lam=sin(p.y*110.+fbm(p*10.)*4.)*.5+.5;
     c=mix(L(vec3(.92,.76,.64)),L(vec3(.85,.68,.57)),lam*.35);
-    vec3 vc=voro(vec3(p.x*7.,p.y*1.5,p.z*7.));
-    float crack=d*(1.-smoothstep(0.,.06,vc.y));
+    vec3 vc=voro(vec3(p.x*3.,p.y*20.,p.z*3.));
+    float crack=d*(1.-smoothstep(0.,.04,vc.y))*.6;
     c=mix(c,L(vec3(.70,.56,.50)),crack*.7);
     H=lam*.003-crack*.012; r=mix(.45,.8,d); s=.5;
   } else if(p.y>ej){
     float t=clamp((p.y-ej)/(scT-ej),0.,1.);
-    vec3 v=voro(p*vec3(15.,15.+t*18.,15.));
+    vec3 v=voro(p*vec3(9.,9.+t*12.,9.));
     vec3 cc=mix(L(vec3(.80,.46,.40)),L(vec3(.86,.58,.48)),t);
     cc*=.93+.1*v.z;
     cc=mix(cc,L(vec3(.92,.74,.66)),(1.-smoothstep(0.,.09,v.y))*.4);
@@ -234,13 +239,13 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     float basal=1.-smoothstep(.0,.07,p.y-ej);
     cc=mix(cc,L(vec3(.58,.37,.28)),basal*.6*(.6+.4*v.z));
     c=mix(cc,cc*.97+.02,d*.5);
-    H=(1.-v.x)*.007+(1.-smoothstep(0.,.09,v.y))*.003; r=.5; s=1.;
+    H=(1.-v.x)*.004+(1.-smoothstep(0.,.09,v.y))*.002; r=.5; s=1.;
   } else if(p.y>db){
     float pap=smoothstep(ej-.45,ej-.2,p.y);
     float wv=fbm(vec3(p.x*1.2,p.y*3.,p.z*1.2))*14.;
     float fib=sin(p.y*46.+wv+sin((p.x+p.z)*9.)*.8)*.5+.5;
     float f=fbm(vec3(p.x*1.6,p.y*7.,p.z*1.6)+fbm(p*2.)*2.);
-    float bundle=smoothstep(.38,.62,f)*.6+fib*.4*smoothstep(.3,.6,f);
+    float bundle=smoothstep(.35,.65,f)*.35+fib*.65*smoothstep(.25,.6,f);
     vec3 ret=mix(L(vec3(.82,.47,.45)),L(vec3(.94,.72,.67)),bundle);
     float f2=fbm(vec3(p.x*7.,p.y*22.,p.z*7.));
     vec3 papC=mix(L(vec3(.88,.55,.52)),L(vec3(.95,.74,.70)),smoothstep(.4,.6,f2));
@@ -300,7 +305,7 @@ vec3 skinBump(vec3 sp,vec3 n,float H,float fd){
   return normalize(abs(det)*n-g);
 }
 `;
-const skinMat = new THREE.MeshPhysicalMaterial({roughness:.5, sheen:.25, sheenRoughness:.6, sheenColor:new THREE.Color('#ffb2a0'), specularIntensity:.55});
+const skinMat = new THREE.MeshPhysicalMaterial({roughness:.5, sheen:.25, sheenRoughness:.6, sheenColor:new THREE.Color('#f5dccd'), specularIntensity:.55});
 skinMat.onBeforeCompile = sh => {
   sh.uniforms.uDry = U.dry; sh.uniforms.uFol = U.fol;
   sh.vertexShader = sh.vertexShader
@@ -311,7 +316,7 @@ skinMat.onBeforeCompile = sh => {
     .replace('#include <color_fragment>', '#include <color_fragment>\nvec3 sCol; float sH, sR, sS; skinSample(vWPos, normalize(vWN), sCol, sH, sR, sS); diffuseColor.rgb = sCol;')
     .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = sR;')
     .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = skinBump(-vViewPosition, normal, sH, faceDirection);')
-    .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += sCol*vec3(.07,.022,.015)*sS;');
+    .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += sCol*vec3(.04,.02,.014)*sS;');
 };
 const blockGeo = new THREE.BoxGeometry(2*W, TOP-BOT, 2*D, 320, 1, 256);
 blockGeo.translate(0, (TOP+BOT)/2, 0);
@@ -405,7 +410,7 @@ const SW = {x:.9, y:dbY(.9, D) + .42};
 {
   const cv = document.createElement('canvas'); cv.width = cv.height = 128;
   const g = cv.getContext('2d'), gr = g.createRadialGradient(64,64,0,64,64,64);
-  gr.addColorStop(0,'rgba(90,50,50,.35)'); gr.addColorStop(.55,'rgba(90,50,50,.12)'); gr.addColorStop(1,'rgba(90,50,50,0)'); g.fillStyle = gr; g.fillRect(0,0,128,128);
+  gr.addColorStop(0,'rgba(0,0,0,.55)'); gr.addColorStop(.55,'rgba(0,0,0,.2)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0,0,128,128);
   const m = new THREE.Mesh(new THREE.PlaneGeometry(17,14), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv), transparent:true, depthWrite:false}));
   m.rotation.x = -Math.PI/2; m.position.y = BOT - .02; scene.add(m);
 }
@@ -414,8 +419,8 @@ const SW = {x:.9, y:dbY(.9, D) + .42};
 const flakeGeo = new THREE.CircleGeometry(.5, 14, 0, Math.PI*2); flakeGeo.scale(1,.75,1); flakeGeo.rotateX(-Math.PI/2);
 { const p = flakeGeo.attributes.position; for (let i=0; i<p.count; i++) { const x = p.getX(i), z = p.getZ(i); p.setY(i, .28*x*x + .12*z*z); } flakeGeo.computeVertexNormals(); }
 const flakes = [];
-for (let i=0; i<220; i++) flakes.push({x:R(-W+.3,W-.3), z:R(-D+.3,D-.3), s:R(.12,.3), ry:R(0,6.28), tilt:R(.08,.45), lift:R(0,.05)});
-const flakeMesh = new THREE.InstancedMesh(flakeGeo, new THREE.MeshPhysicalMaterial({color:'#e9cfc2', roughness:.75, side:THREE.DoubleSide, transparent:true, opacity:.85, sheen:.6, sheenColor:new THREE.Color('#fff4ee')}), flakes.length);
+for (let i=0; i<380; i++) flakes.push({x:R(-W+.3,W-.3), z:R(-D+.3,D-.3), s:R(.05,.13), ry:R(0,6.28), tilt:R(.08,.45), lift:R(0,.05)});
+const flakeMesh = new THREE.InstancedMesh(flakeGeo, new THREE.MeshPhysicalMaterial({color:'#e2c6b4', roughness:.8, side:THREE.DoubleSide, transparent:true, opacity:.85, sheen:.6, sheenColor:new THREE.Color('#fff4ee')}), flakes.length);
 flakeMesh.frustumCulled = false; scene.add(flakeMesh);
 const dummy = new THREE.Object3D();
 function updFlakes(d) {
@@ -439,7 +444,7 @@ scene.add(Object.assign(new THREE.Points(vGeo, new THREE.ShaderMaterial({
   uniforms:{uPR:{value:renderer.getPixelRatio()}},
   vertexShader:`attribute float aA; attribute float aS; uniform float uPR; varying float vA;
     void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); gl_PointSize=aS*uPR*900./-mv.z; gl_Position=projectionMatrix*mv; vA=aA; }`,
-  fragmentShader:`varying float vA; void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.1,d)*vA; if(a<.01) discard; gl_FragColor=vec4(.55,.76,.95,a*.75); }`
+  fragmentShader:`varying float vA; void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.1,d)*vA; if(a<.01) discard; gl_FragColor=vec4(.62,.82,1.,a*.7); }`
 })), {frustumCulled:false}));
 let nOut = 0, firstVap = true;
 function updVapor(t, p) {
