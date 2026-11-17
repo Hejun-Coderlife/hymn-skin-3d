@@ -141,7 +141,7 @@ scene.environmentIntensity = .32;
 const camera = new THREE.PerspectiveCamera(33, innerWidth/innerHeight, .1, 200);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .08;
-controls.minDistance = 5.5; controls.maxDistance = 40;
+controls.minDistance = location.hash.includes("cam=hair") ? .1 : 5.5; controls.maxDistance = 40;
 controls.autoRotate = true; controls.autoRotateSpeed = .3;
 
 scene.add(new THREE.HemisphereLight(0xfff6f2, 0x8a6a66, .7));
@@ -187,9 +187,11 @@ float surfY(vec2 q){return 3.9+.1*sin(q.x*.8+.3)*cos(q.y*.9-.5)+.05*sin(q.x*1.9-
 float topDisp(vec2 q,float d){
   vec3 v1=voro2(q*1.5); float cr1=1.-smoothstep(0.,.08+.03*d,v1.y);
   vec3 v2=voro2(q*4.2+3.1); float cr2=1.-smoothstep(0.,.05,v2.y);
-  float pore=0.; for(int i=0;i<40;i++){pore=max(pore,1.-smoothstep(.035,.1,length(q-uFol[i])));}
+  float pore=0., dmin=9.; for(int i=0;i<40;i++){float dd=length(q-uFol[i]); dmin=min(dmin,dd); pore=max(pore,1.-smoothstep(.035,.1,dd));}
   float fade=smoothstep(0.,.18,min(5.-abs(q.x),4.-abs(q.y)));
-  return fade*(-cr1*(.035+.03*d)-cr2*(.01+.008*d)-pore*.04+fbm(vec3(q*1.6,9.))*.04);
+  float full=-cr1*(.035+.03*d)-cr2*(.01+.008*d)-pore*.04+fbm(vec3(q*1.6,9.))*.04;
+  float near=1.-smoothstep(.07,.2,dmin);          // 毛发周围只留毛孔凹陷，不让皮纹/起伏挡住毛根
+  return fade*mix(full,-pore*.04,near);
 }
 `;
 const GLSL = /* glsl */`
@@ -352,7 +354,7 @@ const block = new THREE.Mesh(blockGeo, skinMat); scene.add(block);
 
 /* ---------- 汗毛（表面）+ 毛孔位置给着色器 ---------- */
 const hairMat = new THREE.MeshPhysicalMaterial({color:'#9a7a64', roughness:.4, sheen:.7, sheenColor:new THREE.Color('#ecd2bf'), transparent:true, opacity:.8});
-function hair(x, z, len, yaw, tilt, sink=.05) {
+function hair(x, z, len, yaw, tilt, sink=.03) {
   // 以固定斜角从毛孔长出，基本是直的，整根只有轻微弧度；根粗梢细
   const pts = [], bend = R(.02,.05);
   for (let k=0; k<=12; k++) { const l = k/12*len; pts.push(V(Math.sin(tilt)*l + bend*l*l, Math.cos(tilt)*l - bend*.4*l*l, 0)); }
@@ -370,7 +372,7 @@ const fol = [];
 const HAIR_DIR = -.6;   // 这一小块皮肤上毛发统一倒向的方向（同一区域毛流方向一致）
 for (let i=0; i<40; i++) {
   let x, z, n = 0; do { x = R(-4.6,4.6); z = R(-3.6,3.6); } while (fol.some(f => f.distanceTo(new THREE.Vector2(x,z)) < .7) && ++n < 50);
-  fol.push(new THREE.Vector2(x,z)); hair(x, z, R(1.8,2.6), HAIR_DIR + R(-.3,.3), R(.95,1.15));   // 毫毛：露出部分约为毛根的 1.5~2 倍
+  fol.push(new THREE.Vector2(x,z)); hair(x, z, R(1.8,2.6), HAIR_DIR + R(-.3,.3), R(.85,1.0));   // 毫毛：露出部分约为毛根的 1.5~2 倍
 }
 U.fol.value = fol;
 // 切面那根毛囊伸出表面的部分
@@ -668,7 +670,8 @@ const saved = STATES.find(s => s.id === want && s.ready) || STATES[0];
 Object.assign(cur, saved.p);
 select(saved, true);
 U.dry.value = cur.dry; updFlakes(cur.dry);
-if (hashCam) { const c = hashCam.split(',').map(Number); camera.position.set(c[0],c[1],c[2]); controls.target.set(c[3],c[4],c[5]); controls.autoRotate = false; }
+if (hashCam && hashCam.startsWith('hair')) { const f = fol[+hashCam.slice(4)||0], y = surfY(f.x,f.y); camera.position.set(f.x+.35, y+.3, f.y+.45); controls.target.set(f.x, y, f.y); controls.autoRotate = false; }
+else if (hashCam) { const c = hashCam.split(',').map(Number); camera.position.set(c[0],c[1],c[2]); controls.target.set(c[3],c[4],c[5]); controls.autoRotate = false; }
 
 /* ---------- 循环 ---------- */
 addEventListener('resize', () => {
