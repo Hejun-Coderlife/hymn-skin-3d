@@ -63,6 +63,7 @@ body.nolabel .lbl{opacity:0!important}
   .foot{display:none}
   .tools{right:14px;top:16px}
 }
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);font-size:15px;letter-spacing:.12em;z-index:5;pointer-events:none}
 </style>
 <script type="importmap">
 {"imports":{
@@ -167,8 +168,25 @@ const rand = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(
 const R = (a,b) => a + (b-a)*rand();
 const V = (x,y,z) => new THREE.Vector3(x,y,z);
 
-const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
-let PR = Math.min(devicePixelRatio, 1.5);
+/* ---------- 画质分档 ----------
+   2026-11-18：门店那种核显电脑（实测 i3-12100 + Intel UHD 730，全屏 1920×1080）原来只有 4~5 帧，第一次打开还卡死约 80 秒（编译着色器）。
+   pr 起步清晰度、min/max 自动升降的范围、hi 停下来时重画的清晰度、idle 停下来时每秒重画几次（只有水汽在动）、seg 皮肤块的网格密度。
+   ?q=low|mid|high 手动指定（测试用，指定了就不自动改）；没指定用上次自动测出来的档；第一次按显卡猜，跑起来再按实际帧数记下更合适的档，下次打开直接用 */
+const QUAL = {
+  high: {aa:true,  pr:Math.min(devicePixelRatio,1.5), min:.75, max:Math.min(devicePixelRatio,1.5), hi:Math.min(devicePixelRatio,2), idle:24, seg:1},
+  mid:  {aa:true,  pr:Math.min(devicePixelRatio,1),   min:.5,  max:Math.min(devicePixelRatio,1),   hi:Math.min(devicePixelRatio,1.25), idle:12, seg:.75},
+  low:  {aa:false, pr:.6,                             min:.4,  max:Math.min(devicePixelRatio,1),   hi:.8, idle:6, seg:.5},
+};
+const QORDER = ['low', 'mid', 'high'];
+const gpuName = (() => { try { const g = document.createElement('canvas').getContext('webgl2'), d = g && g.getExtension('WEBGL_debug_renderer_info'), n = d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : ''; const l = g && g.getExtension('WEBGL_lose_context'); if (l) l.loseContext(); return n; } catch (e) { return ''; } })();
+const qArg = new URLSearchParams(location.search).get('q'), qFixed = !!QUAL[qArg];
+let qName = qFixed ? qArg : localStorage.getItem('hymnSkin.q');
+if (!QUAL[qName]) qName = /Apple|NVIDIA|GeForce|Quadro|Radeon RX/i.test(gpuName) ? 'high' : /Intel|UHD|HD Graphics|Iris|SwiftShader|llvmpipe|Basic Render|Mali|Adreno|PowerVR/i.test(gpuName) ? 'low' : 'mid';
+const Q = QUAL[qName];
+const saveQ = step => { if (qFixed) return; const n = QORDER[QORDER.indexOf(qName) + step]; if (n) localStorage.setItem('hymnSkin.q', n); };
+
+const renderer = new THREE.WebGLRenderer({antialias:Q.aa, powerPreference:'high-performance'});
+let PR = Q.pr;
 renderer.setPixelRatio(PR);
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -222,19 +240,21 @@ const NOISE = /* glsl */`
 uniform float uDry, uOil, uBlack, uAcne, uMark, uBar, uRed, uSpot, uSun, uAge;
 const vec2 LC=vec2(-1.42,4.);   // 病灶：正面切开的那根毛囊的开口
 uniform vec2 uFol[40];
+// 循环次数用 uniform 传进来（值固定 40 / 8 / 10）：写死的常数会被 Windows 上的 ANGLE 编译器整个展开，皮肤着色器第一次编译要 75 秒（2026-11-18 实测 UHD 730），用 uniform 就编成真循环，画出来一样
+uniform int uN40, uN8, uN10, uN4, uN1;
 varying vec3 vWPos; varying vec3 vWN;
 float h13(vec3 p){p=fract(p*.1031);p+=dot(p,p.zyx+31.32);return fract((p.x+p.y)*p.z);}
 vec3 h33(vec3 p){p=fract(p*vec3(.1031,.1030,.0973));p+=dot(p,p.yxz+33.33);return fract((p.xxy+p.yxx)*p.zyx);}
 float vn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
  return mix(mix(mix(h13(i),h13(i+vec3(1,0,0)),f.x),mix(h13(i+vec3(0,1,0)),h13(i+vec3(1,1,0)),f.x),f.y),
             mix(mix(h13(i+vec3(0,0,1)),h13(i+vec3(1,0,1)),f.x),mix(h13(i+vec3(0,1,1)),h13(i+vec3(1,1,1)),f.x),f.y),f.z);}
-float fbm(vec3 p){float a=.5,s=0.;for(int i=0;i<4;i++){s+=a*vn(p);p=p*2.03+vec3(1.7,9.2,3.1);a*=.5;}return s;}
+float fbm(vec3 p){float a=.5,s=0.;for(int i=0;i<uN4;i++){s+=a*vn(p);p=p*2.03+vec3(1.7,9.2,3.1);a*=.5;}return s;}
 vec3 voro(vec3 p){vec3 i=floor(p),f=fract(p);float d1=8.,d2=8.,id=0.;
- for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++){vec3 g=vec3(x,y,z);vec3 r=g+h33(i+g)-f;float d=dot(r,r);
+ for(int x=-uN1;x<=uN1;x++)for(int y=-uN1;y<=uN1;y++)for(int z=-uN1;z<=uN1;z++){vec3 g=vec3(x,y,z);vec3 r=g+h33(i+g)-f;float d=dot(r,r);
   if(d<d1){d2=d1;d1=d;id=h13(i+g+.5);}else if(d<d2)d2=d;}
  d1=sqrt(d1);d2=sqrt(d2);return vec3(d1,d2-d1,id);}
 vec3 voro2(vec2 p){vec2 i=floor(p),f=fract(p);float d1=8.,d2=8.,id=0.;
- for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){vec2 g=vec2(x,y);vec2 r=g+h33(vec3(i+g,7.)).xy-f;float d=dot(r,r);
+ for(int x=-uN1;x<=uN1;x++)for(int y=-uN1;y<=uN1;y++){vec2 g=vec2(x,y);vec2 r=g+h33(vec3(i+g,7.)).xy-f;float d=dot(r,r);
   if(d<d1){d2=d1;d1=d;id=h13(vec3(i+g,3.));}else if(d<d2)d2=d;}
  d1=sqrt(d1);d2=sqrt(d2);return vec3(d1,d2-d1,id);}
 float grooves(vec2 q){
@@ -245,14 +265,14 @@ float lesB(vec2 q){   // 闭口/痘痘把皮肤顶起来的鼓包
   float s1=smoothstep(0.,.33,uAcne), s2=smoothstep(.33,.66,uAcne), s3=smoothstep(.66,1.,uAcne);
   float R=.32+.26*s2+.1*s3, d=length(q-LC); return -uAge*.2*grooves(q)+ (.08*s1+.09*s2+.1*s3)*exp(-d*d/(R*R))+uBlack*.035*exp(-d*d/.03);
 }
-float oilFilm(vec2 q){float dm=9.; for(int i=0;i<40;i++) dm=min(dm,length(q-uFol[i]));   // 毛孔口斜坡上不打油光，免得一圈发白
+float oilFilm(vec2 q){float dm=9.; for(int i=0;i<uN40;i++) dm=min(dm,length(q-uFol[i]));   // 毛孔口斜坡上不打油光，免得一圈发白
   return uOil*(.6+.4*smoothstep(.35,.65,fbm(vec3(q*.55,21.))))*smoothstep(.08,.2,dm);}   // 油膜：整片泛油但厚薄不匀
 float surfY(vec2 q){return 3.9+.1*sin(q.x*.8+.3)*cos(q.y*.9-.5)+.05*sin(q.x*1.9-q.y*1.3+1.)+lesB(q);}
 /* 表面真实下凹：皮纹沟 + 毛孔（几何位移，边缘渐隐以免和切面错位） */
 float topDisp(vec2 q,float d){
   vec3 v1=voro2(q*1.5); float cr1=1.-smoothstep(0.,.08+.03*d,v1.y);
   vec3 v2=voro2(q*4.2+3.1); float cr2=1.-smoothstep(0.,.05,v2.y);
-  float pore=0., dmin=9.; for(int i=0;i<40;i++){float dd=length(q-uFol[i]); dmin=min(dmin,dd); pore=max(pore,1.-smoothstep(.035,.1,dd));}
+  float pore=0., dmin=9.; for(int i=0;i<uN40;i++){float dd=length(q-uFol[i]); dmin=min(dmin,dd); pore=max(pore,1.-smoothstep(.035,.1,dd));}
   float fade=smoothstep(0.,.18,min(5.-abs(q.x),4.-abs(q.y)));
   float full=-cr1*(.035+.03*d)-cr2*(.01+.008*d)-pore*.04+fbm(vec3(q*1.6,9.))*.04;
   float near=1.-smoothstep(.07,.2,dmin);          // 毛发周围只留毛孔凹陷，不让皮纹/起伏挡住毛根
@@ -279,7 +299,7 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   vec3 v2=voro2(w*3.4+3.1); float g2=1.-smoothstep(0.,.12,v2.y); g2*=g2;
   float grain=fbm(vec3(q*26.,2.)), n2=fbm(vec3(q*.9,4.)), mot=fbm(vec3(q*2.3,8.));
   float pore=0.;
-  for(int i=0;i<40;i++){pore=max(pore,1.-smoothstep(.03*(1.+1.3*uOil),.085*(1.+1.4*uOil),length(q-uFol[i])));}
+  for(int i=0;i<uN40;i++){pore=max(pore,1.-smoothstep(.03*(1.+1.3*uOil),.085*(1.+1.4*uOil),length(q-uFol[i])));}
   vec3 vp=voro2(q*2.2+11.); pore=max(pore,step(.62-.32*uOil,vp.z)*(1.-smoothstep(.0,.028*(1.+2.*uOil+.6*uBlack),vp.x))*.75);
   H=-g1*(.011+.031*d)-g2*(.003+.01*d)-pore*(.015+.012*d)+(grain-.5)*(.0025+.002*d);
   vec3 base=mix(L(vec3(.88,.70,.58)),L(vec3(.84,.64,.53)),smoothstep(.3,.7,n2));
@@ -302,12 +322,12 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   c=mix(c,c*vec3(1.04,.99,.9),film*.5); r=mix(r,.08,film);
   // 毛孔口冒出的油珠：微黄、亮、略鼓
   float bead=0.;
-  for(int i=0;i<40;i++){bead=max(bead,1.-smoothstep(.02,.055,length(q-uFol[i]-vec2(.012,.008))));}
+  for(int i=0;i<uN40;i++){bead=max(bead,1.-smoothstep(.02,.055,length(q-uFol[i]-vec2(.012,.008))));}
   bead=max(bead,step(.5,vp.z)*(1.-smoothstep(.0,.02,vp.x))*.8);
   c=mix(c,L(vec3(.96,.86,.6)),bead*uOil*.55); H+=bead*uOil*.006; r=mix(r,.03,bead*uOil);
   // 黑头：毛孔口发黑
   float bh=0.;
-  if(uBlack>.001) for(int i=0;i<40;i++){bh=max(bh,1.-smoothstep(.045,.075,length(q-uFol[i])+(fbm(vec3(q*30.,1.))-.5)*.02));}
+  if(uBlack>.001){ float bn=(fbm(vec3(q*30.,1.))-.5)*.02; for(int i=0;i<uN40;i++){bh=max(bh,1.-smoothstep(.045,.075,length(q-uFol[i])+bn));} }   // 噪声跟 i 无关，提到循环外只算一次
   vec3 vb=voro2(q*3.2+5.); bh=max(bh,step(.45,vb.z)*(1.-smoothstep(.025,.05,vb.x+(fbm(vec3(q*30.,2.))-.5)*.015)));
   c=mix(c,L(vec3(.10,.07,.05)),bh*uBlack*.95); H+=bh*uBlack*.004; r=mix(r,.25,bh*uBlack);
   float ld=length(q-LC);
@@ -328,7 +348,7 @@ void topSkin(vec3 p,out vec3 c,out float H,out float r,out float s){
   if(uMark>.001){
     vec4 MK[8]=vec4[8](vec4(-2.6,-1.8,.30,.9),vec4(1.2,-2.4,.24,.2),vec4(2.8,.6,.34,.7),vec4(-.4,.9,.20,0.),
                        vec4(3.6,-1.7,.22,.5),vec4(-3.4,1.6,.28,.3),vec4(.8,2.6,.26,.85),vec4(-1.2,-.5,.18,.1));
-    for(int i=0;i<8;i++){
+    for(int i=0;i<uN8;i++){
       vec2 dq=(q-MK[i].xy)/MK[i].z;
       float dn=length(dq)+(fbm(vec3(dq*2.2,float(i)*3.1))-.5)*.7+(fbm(vec3(dq*6.,float(i)+20.))-.5)*.22;   // 边缘不规则
       float m2=uMark*(1.-smoothstep(.45,1.1,dn))*(.75+.25*fract(MK[i].w*7.3+.4));                         // 外圈渐淡，深浅各不同
@@ -490,7 +510,7 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     {
       vec2 D0=g0+vec2(-.1,.3), D1=vec2(-1.40,3.0), D2=vec2(-2.+(3.06-.7)*.18+.025,3.06);
       float best=9., bt=0.;
-      for(int i=0;i<8;i++){ float t0=float(i)/8., t1=float(i+1)/8.;
+      for(int i=0;i<uN8;i++){ float t0=float(i)/8., t1=float(i+1)/8.;
         vec2 P0=mix(mix(D0,D1,t0),mix(D1,D2,t0),t0), P1=mix(mix(D0,D1,t1),mix(D1,D2,t1),t1);
         vec2 pa=p.xy-P0, ba=P1-P0; float hh=clamp(dot(pa,ba)/dot(ba,ba),0.,1.); float dd=length(pa-ba*hh);
         if(dd<best){best=dd; bt=mix(t0,t1,hh);} }
@@ -508,7 +528,7 @@ void cutFace(vec3 p,vec3 nw,out vec3 c,out float H,out float r,out float s){
     }
     vec2 A=vec2(-2.+(1.95-.7)*.18+.15,1.95), Bp=vec2(A.x+1.65,ejY(vec2(A.x+1.65,p.z))-.07), C=vec2(A.x+1.25,1.72);
     float best=9., bt=0.;
-    for(int i=0;i<10;i++){ float t0=float(i)/10., t1=float(i+1)/10.;
+    for(int i=0;i<uN10;i++){ float t0=float(i)/10., t1=float(i+1)/10.;
       vec2 P0=mix(mix(A,C,t0),mix(C,Bp,t0),t0), P1=mix(mix(A,C,t1),mix(C,Bp,t1),t1);
       vec2 pa=p.xy-P0, ba=P1-P0; float hh=clamp(dot(pa,ba)/dot(ba,ba),0.,1.); float dd=length(pa-ba*hh);
       if(dd<best){best=dd; bt=mix(t0,t1,hh);} }
@@ -534,7 +554,7 @@ vec3 skinBump(vec3 sp,vec3 n,float H,float fd){
 `;
 const skinMat = new THREE.MeshPhysicalMaterial({roughness:.5, sheen:.25, sheenRoughness:.6, sheenColor:new THREE.Color('#f5dccd'), specularIntensity:.55, clearcoat:1, clearcoatRoughness:.06});   // 清漆层只给油膜用，没油时乘成 0
 skinMat.onBeforeCompile = sh => {
-  sh.uniforms.uDry = U.dry; sh.uniforms.uOil = U.oil; sh.uniforms.uBlack = U.black; sh.uniforms.uAcne = U.acne; sh.uniforms.uMark = U.mark; sh.uniforms.uBar = U.bar; sh.uniforms.uRed = U.red; sh.uniforms.uSpot = U.spot; sh.uniforms.uSun = U.sun; sh.uniforms.uAge = U.age; sh.uniforms.uFol = U.fol; sh.uniforms.uCol = U.col; sh.uniforms.uNrm = U.nrm;
+  sh.uniforms.uDry = U.dry; sh.uniforms.uOil = U.oil; sh.uniforms.uBlack = U.black; sh.uniforms.uAcne = U.acne; sh.uniforms.uMark = U.mark; sh.uniforms.uBar = U.bar; sh.uniforms.uRed = U.red; sh.uniforms.uSpot = U.spot; sh.uniforms.uSun = U.sun; sh.uniforms.uAge = U.age; sh.uniforms.uFol = U.fol; sh.uniforms.uN40 = {value:40}; sh.uniforms.uN8 = {value:8}; sh.uniforms.uN10 = {value:10}; sh.uniforms.uN4 = {value:4}; sh.uniforms.uN1 = {value:1}; sh.uniforms.uCol = U.col; sh.uniforms.uNrm = U.nrm;
   sh.vertexShader = sh.vertexShader
     .replace('#include <common>', '#include <common>\n' + NOISE)
     .replace('#include <begin_vertex>', '#include <begin_vertex>\nif(normal.y>.5) transformed.y += topDisp(transformed.xz, uDry);\nif(transformed.y>3.) transformed.y += lesB(transformed.xz);\nvWPos=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*normal);');
@@ -546,7 +566,7 @@ skinMat.onBeforeCompile = sh => {
     .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += sCol*vec3(.04,.02,.014)*sS;\nif(vWN.y>.5 && uOil>.001){ vec3 hv=normalize((viewMatrix*vec4(.12,1.,.08,0.)).xyz); float nh=max(dot(normal,hv),0.); float fo=oilFilm(vWPos.xz); totalEmissiveRadiance += vec3(1.,.96,.88)*fo*(pow(nh,70.)*.9+pow(nh,10.)*.07); }')   // 油光：跟着视角走的湿亮高光
     .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\nmaterial.clearcoat *= vWN.y>.5 ? oilFilm(vWPos.xz) : 0.;');
 };
-const blockGeo = new THREE.BoxGeometry(2*W, TOP-BOT, 2*D, 320, 1, 256);
+const blockGeo = new THREE.BoxGeometry(2*W, TOP-BOT, 2*D, Math.round(320*Q.seg), 1, Math.round(256*Q.seg));   // 低档网格稀一半（细节主要靠着色器，差别不大）
 blockGeo.translate(0, (TOP+BOT)/2, 0);
 { const p = blockGeo.attributes.position; for (let i=0; i<p.count; i++) if (p.getY(i) > TOP-1e-4) p.setY(i, surfY(p.getX(i), p.getZ(i))); }
 const block = new THREE.Mesh(blockGeo, skinMat); scene.add(block);
@@ -924,6 +944,18 @@ applyP();
 if (hashCam && hashCam.startsWith('hair')) { const f = fol[+hashCam.slice(4)||0], y = surfY(f.x,f.y); camera.position.set(f.x+.35, y+.3, f.y+.45); controls.target.set(f.x, y, f.y); controls.autoRotate = false; }
 else if (hashCam) { const c = hashCam.split(',').map(Number); camera.position.set(c[0],c[1],c[2]); controls.target.set(c[3],c[4],c[5]); controls.autoRotate = false; }
 
+// 低档：去掉绒光（sheen）和清漆（clearcoat，皮肤的油膜要用，保留），着色器短很多，编译、画都快
+if (qName === 'low') scene.traverse(o => { [].concat(o.material || []).forEach(m => { if (m.isMeshPhysicalMaterial) { m.sheen = 0; if (m !== skinMat) m.clearcoat = 0; } }); });
+
+// 先在后台编译着色器（不卡页面），编好再开始画；藏着的（皮屑、扩张的血管）也一起编，免得点到那一步再卡
+{
+  const tip = document.createElement('div'); tip.id = 'loading'; tip.textContent = '正在准备 3D 模型…'; document.body.append(tip);
+  const hidden = []; scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
+  try { await renderer.compileAsync(scene, camera); } catch (e) { console.warn('compileAsync', e); }
+  hidden.forEach(o => o.visible = false);
+  tip.remove();
+}
+
 /* ---------- 循环 ---------- */
 addEventListener('resize', () => {
   camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
@@ -931,8 +963,8 @@ addEventListener('resize', () => {
 });
 const clock = new THREE.Clock();
 const ease = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
-let lastMeter = 0, dirty = 3, ft = 1/60, fc = 0, idleT = 0, hiOn = false, lastHi = 0;
-const HI = Math.min(devicePixelRatio, 2);
+let lastMeter = 0, dirty = 3, ft = 1/60, fc = 0, idleT = 0, hiOn = false, lastHi = 0, slowN = 0, fastN = 0;
+const HI = Q.hi;
 controls.addEventListener('change', () => dirty = 2);
 addEventListener('resize', () => dirty = 2);
 document.addEventListener('click', () => dirty = 2);
@@ -956,15 +988,18 @@ renderer.setAnimationLoop(() => {
   idleT = motion ? 0 : idleT + dt;
   const wantHi = idleT > .2;
   const sw = wantHi !== hiOn;   // 换分辨率会清空画布，当帧必须重画，否则闪一下
-  if (sw) { hiOn = wantHi; renderer.setPixelRatio(hiOn ? HI : PR); }
-  if (sw || busy && (!hiOn || dirty > 0 || t - lastHi > 1/24)) {   // 静止时只有水汽粒子在动，24 帧够了
+  if (sw) { hiOn = wantHi; renderer.setPixelRatio(hiOn ? Math.max(HI, PR) : PR); }
+  if (sw || busy && (!hiOn || dirty > 0 || t - lastHi > 1/Q.idle)) {   // 静止时只有水汽粒子在动，高档每秒 24 次、低档 6 次就够
     if (hiOn) lastHi = t;
     renderer.render(scene, camera);
     updLabels();
-    if (!hiOn) {   // 帧率跟不上就自动降一点清晰度（最低 0.75）
+    if (!hiOn) {   // 帧率跟不上就自动降一点清晰度（最低到这一档的 min）
       ft = ft*.92 + dt*.08;
-      if (++fc > 60 && ft > 1/40 && PR > .75) { PR = Math.max(.75, PR - .15); renderer.setPixelRatio(PR); fc = 0; dirty = 2; }
-      else if (fc > 90 && ft < 1/55 && PR < Math.min(devicePixelRatio, 1.5)) { PR = Math.min(Math.min(devicePixelRatio, 1.5), PR + .15); renderer.setPixelRatio(PR); fc = 0; }   // 跟得上就加回去，别卡过一次就一直糊
+      if (++fc > 60 && ft > 1/40 && PR > Q.min) { PR = Math.max(Q.min, PR - .15); renderer.setPixelRatio(PR); fc = 0; dirty = 2; }
+      else if (fc > 90 && ft < 1/55 && PR < Q.max) { PR = Math.min(Q.max, PR + .15); renderer.setPixelRatio(PR); fc = 0; }   // 跟得上就加回去，别卡过一次就一直糊
+      // 记下次用哪一档：降到最低还不到 24 帧 → 下次降一档；升到最高还稳 55 帧以上 → 下次升一档
+      if (PR <= Q.min + 1e-3 && ft > 1/24) { if (++slowN === 120) saveQ(-1); } else slowN = 0;
+      if (PR >= Q.max - 1e-3 && ft < 1/55) { if (++fastN === 300) saveQ(1); } else fastN = 0;
     }
   }
   if (t - lastMeter > .25) { lastMeter = t; document.getElementById('mOut').textContent = nOut; }
